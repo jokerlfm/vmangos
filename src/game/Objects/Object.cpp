@@ -1807,9 +1807,6 @@ float WorldObject::GetLeewayBonusRangeForTargets(Player const* player, Unit cons
 
 float WorldObject::GetLeewayBonusRange(Unit const* target, bool ability) const
 {
-    // lfm no leeway
-    return 0.0f;
-
     if (target && IsUnit())
     {
         if (Player const* pPlayer = ToPlayer())

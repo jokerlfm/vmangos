@@ -1713,9 +1713,10 @@ void GameObject::Use(Unit* user)
 
                     if (success || sWorld.getConfig(CONFIG_BOOL_SKILL_FAIL_GAIN_FISHING))
                     {
-                        // lfm fishing skill will not increase in lower pools 
+                        // lfm fishing skill will not increase in lower pools
+                        int pureFishingSkill = player->GetSkillValuePure(SKILL_FISHING);
                         int maxZoneSkill = zone_skill + 50;
-                        if (skill < maxZoneSkill)
+                        if (pureFishingSkill < maxZoneSkill)
                         {
                             player->UpdateFishingSkill();
                         }

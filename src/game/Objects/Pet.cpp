@@ -2316,7 +2316,12 @@ void Pet::InitializeDefaultName()
             {
                 if (CreatureFamilyEntry const* cFamily = sCreatureFamilyStore.LookupEntry(GetCreatureInfo()->pet_family))
                 {
-                    SetName(cFamily->Name[sWorld.GetDefaultDbcLocale()]);
+                    // lfm hunter pet default name
+                    //SetName(cFamily->Name[sWorld.GetDefaultDbcLocale()]);
+                    if (const CreatureInfo* ci = GetCreatureInfo())
+                    {
+                        SetName(ci->name);
+                    }
                     break;
                 }
             }

@@ -2442,6 +2442,12 @@ void Player::RegenerateHealth()
     else if (!IsInCombat() || HasAuraType(SPELL_AURA_MOD_REGEN_DURING_COMBAT))
     {
         addValue = GetRegenHPPerSpirit() * HealthIncreaseRate;
+
+        // lfm hp regen 
+        float spiritRegen = GetStat(STAT_SPIRIT);
+        spiritRegen = spiritRegen * 2 / 5;
+        addValue = spiritRegen * HealthIncreaseRate;
+
         if (!IsInCombat())
         {
             AuraList const& lModHealthRegenPct = GetAurasByType(SPELL_AURA_MOD_HEALTH_REGEN_PERCENT);

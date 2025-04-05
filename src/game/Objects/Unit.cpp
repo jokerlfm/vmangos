@@ -10613,15 +10613,8 @@ float Unit::GetMeleeReach() const
 
 float Unit::GetCombatReach(bool forMeleeRange /*=true*/) const
 {
-    float reach = GetFloatValue(UNIT_FIELD_COMBATREACH);
-    
-    // lfm min reache from 1.5 to 0.5
-    //return (forMeleeRange && reach < 1.5f) ? 1.5f : reach;
-    if (reach < 0.5f)
-    {
-        reach = 0.5f;
-    }
-    return reach;
+    float reach = GetFloatValue(UNIT_FIELD_COMBATREACH);    
+    return (forMeleeRange && reach < 1.5f) ? 1.5f : reach;    
 }
 
 float Unit::GetCombatReachToTarget(Unit const* pVictim, bool ability, float flat_mod, bool ignoreLeeway /*= false*/) const
@@ -10630,9 +10623,7 @@ float Unit::GetCombatReachToTarget(Unit const* pVictim, bool ability, float flat
         ? pVictim->GetCombatReach(true)
         : 0.0f;
 
-    // lfm each unit only do melee with own reach 
-    //float reach = GetCombatReach(true) + victimReach + flat_mod;
-    float reach = GetCombatReach(true) + flat_mod;
+    float reach = GetCombatReach(true) + victimReach + flat_mod;
 
     reach += BASE_MELEERANGE_OFFSET;
     if (reach < ATTACK_DISTANCE)
