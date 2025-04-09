@@ -47,6 +47,7 @@ public:
     uint32 Reset;
     uint32 SellingItemsMax;
     uint32 BuyingItemsMax;
+    uint32 BuyerId;
     float BuyerViewRate;
     float BuyerBuyRate;
     int ManagerCheckDelay;

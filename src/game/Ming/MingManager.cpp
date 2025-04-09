@@ -251,7 +251,7 @@ bool MingManager::UpdateBuyer(uint32 pDiff)
                     }
 
                     float viewPower = frand(0.0f, 1.0f);
-                    sLog.Out(LOG_BASIC, LogLevel::LOG_LVL_DETAIL, "buyer view check : %d - %f - %f", eachAuctionId, sMingConfig.BuyerViewRate, viewPower);
+                    sLog.Out(LOG_BASIC, LogLevel::LOG_LVL_BASIC, "buyer view check : %d - %f - %f", eachAuctionId, sMingConfig.BuyerViewRate, viewPower);
                     if (viewPower < sMingConfig.BuyerViewRate)
                     {
                         if (Item* checkItem = sAuctionMgr.GetAItem(aeIT->second->itemGuidLow))
@@ -291,10 +291,9 @@ bool MingManager::UpdateBuyer(uint32 pDiff)
                                 }
                                 float priceRate = (float)basePrice / (float)aeIT->second->buyout;
                                 priceRate = priceRate * priceRate;
-                                priceRate = 1 / priceRate;
                                 buyRate = buyRate * priceRate;
                                 float buyPower = frand(0.0f, 1.0f);
-                                sLog.Out(LOG_BASIC, LogLevel::LOG_LVL_DETAIL, "buy check : %s - %f - %f", destIT->Name1, buyRate, buyPower);
+                                sLog.Out(LOG_BASIC, LogLevel::LOG_LVL_BASIC, "buy check : %s - %f - %f", destIT->Name1, buyRate, buyPower);
                                 if (buyPower < buyRate)
                                 {
                                     toBuyAuctionIdSet.insert(eachAuctionId);
@@ -315,26 +314,30 @@ bool MingManager::UpdateBuyer(uint32 pDiff)
     }
     else
     {
-        uint32 auctionEntry = *toBuyAuctionIdSet.begin();
-        toBuyAuctionIdSet.erase(auctionEntry);
-        AuctionEntry* destAE = nullptr;
-        for (std::set<uint32>::iterator ahIDIT = auctionHouseIDSet.begin(); ahIDIT != auctionHouseIDSet.end(); ahIDIT++)
+        if (toBuyAuctionIdSet.size() > 0)
         {
-            uint32 ahID = *ahIDIT;
-            AuctionHouseEntry const* ahEntry = sAuctionHouseStore.LookupEntry(*ahIDIT);
-            AuctionHouseObject* aho = sAuctionMgr.GetAuctionsMap(ahEntry);
-            destAE = aho->GetAuction(auctionEntry);
-            if (destAE)
+            uint32 auctionEntry = *toBuyAuctionIdSet.begin();
+            toBuyAuctionIdSet.erase(auctionEntry);
+            AuctionEntry* destAE = nullptr;
+            for (std::set<uint32>::iterator ahIDIT = auctionHouseIDSet.begin(); ahIDIT != auctionHouseIDSet.end(); ahIDIT++)
             {
-                destAE->bid = destAE->buyout;
-                sAuctionMgr.SendAuctionSuccessfulMail(destAE);
-                sAuctionMgr.SendAuctionWonMail(destAE);
-                sAuctionMgr.RemoveAItem(destAE->itemGuidLow);
-                aho->RemoveAuction(destAE);
-                destAE->DeleteFromDB();
-                delete destAE;
-                sLog.Out(LOG_BASIC, LogLevel::LOG_LVL_DETAIL, "Auction %d - %d was bought by ming buyer", auctionEntry, destAE->itemTemplate);
-                break;
+                uint32 ahID = *ahIDIT;
+                AuctionHouseEntry const* ahEntry = sAuctionHouseStore.LookupEntry(*ahIDIT);
+                AuctionHouseObject* aho = sAuctionMgr.GetAuctionsMap(ahEntry);
+                destAE = aho->GetAuction(auctionEntry);
+                if (destAE)
+                {
+                    destAE->bid = destAE->buyout;
+                    destAE->bidder = sMingConfig.BuyerId;
+                    sAuctionMgr.SendAuctionSuccessfulMail(destAE);
+                    sAuctionMgr.SendAuctionWonMail(destAE);
+                    sAuctionMgr.RemoveAItem(destAE->itemGuidLow);
+                    aho->RemoveAuction(destAE);
+                    destAE->DeleteFromDB();
+                    delete destAE;
+                    sLog.Out(LOG_BASIC, LogLevel::LOG_LVL_BASIC, "Auction %d - %d was bought by ming buyer", auctionEntry, destAE->itemTemplate);
+                    break;
+                }
             }
         }
     }

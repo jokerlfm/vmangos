@@ -106,6 +106,7 @@ bool MingConfig::StartMingSystem()
     Reset = GetIntDefault("Reset", 0);
     SellingItemsMax = GetIntDefault("SellingItemsMax", 100);
     BuyingItemsMax = GetIntDefault("BuyingItemsMax", 100);
+    BuyerId = GetIntDefault("BuyerId", 0);
     BuyerViewRate = GetFloatDefault("BuyerViewRate", 0.1f);
     BuyerBuyRate = GetFloatDefault("BuyerBuyRate", 1.0f);
     ManagerCheckDelay = GetIntDefault("ManagerCheckDelay", 60000);
