@@ -69,7 +69,6 @@ enum
         
     NPC_ONYXIAN_WHELP           = 11262,
     NPC_ONYXIAN_WARDER          = 12129,
-    NPC_ERUPTION_TRIGGER        = 20009,
 
     GO_LAVATRAP_1               = 177984,
     GO_LAVATRAP_2               = 177985,

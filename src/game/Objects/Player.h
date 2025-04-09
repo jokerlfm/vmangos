@@ -1312,7 +1312,7 @@ class Player final: public Unit
         void LearnSpellHighRank(uint32 spellid);
         uint32 GetSpellRank(SpellEntry const* spellInfo) const final;
         void SendChannelUpdate(uint32 time) const;
-
+        void UpdateChannelStartPosition();
         void CastItemCombatSpell(Unit* Target, WeaponAttackType attType);
         void CastItemUseSpell(Item* item, SpellCastTargets const& targets);
 
@@ -1330,7 +1330,7 @@ class Player final: public Unit
         void SendSpellMod(SpellModifier const* mod) const;
         bool HasInstantCastingSpellMod(SpellEntry const* spellInfo) const;
         bool IsAffectedBySpellmod(SpellEntry const* spellInfo, SpellModifier const* mod, Spell const* spell = nullptr) const;
-        template <class T> T ApplySpellMod(uint32 spellId, SpellModOp op, T &basevalue, Spell* spell = nullptr);
+        template <class T> T ApplySpellMod(uint32 spellId, SpellModOp op, T &basevalue, Spell* spell = nullptr, bool dropCharge = true);
         SpellModifier* GetSpellMod(SpellModOp op, uint32 spellId) const;
         void RemoveSpellMods(Spell* spell);
         void RestoreSpellMods(Spell* spell, uint32 ownerAuraId = 0, Aura* aura = nullptr);

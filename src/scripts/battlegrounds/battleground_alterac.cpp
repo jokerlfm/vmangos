@@ -5153,6 +5153,23 @@ CreatureAI* GetAI_npc_av_trigger_for_quest(Creature* creature)
     return new npc_av_trigger_for_questAI(creature);
 }
 
+// 21544, 21565 - Create Shredder
+struct AVCreateShredderScript : SpellScript
+{
+    void OnSummon(Spell* spell, Creature* summon) const final
+    {
+        // Exception for Alterac Shredder. The second effect of the spell (possess) can't target the shredder
+        // because it is not summoned at target selection phase.
+        summon->SetUInt32Value(UNIT_CREATED_BY_SPELL, spell->m_spellInfo->EffectTriggerSpell[1]);
+        summon->SetCreatorGuid(spell->m_caster->GetObjectGuid());
+    }
+};
+
+SpellScript* GetScript_AVCreateShredder(SpellEntry const*)
+{
+    return new AVCreateShredderScript();
+}
+
 void AddSC_bg_alterac()
 {
     Script* newscript;
@@ -5280,5 +5297,10 @@ void AddSC_bg_alterac()
     newscript = new Script;
     newscript->Name = "npc_av_trigger_for_quest";
     newscript->GetAI = &GetAI_npc_av_trigger_for_quest;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "spell_av_create_shredder";
+    newscript->GetSpellScript = &GetScript_AVCreateShredder;
     newscript->RegisterSelf();
 }

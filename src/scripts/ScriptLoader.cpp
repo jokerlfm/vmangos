@@ -240,7 +240,17 @@ void AddSC_war_effort();
 void AddSC_npc_j_eevee();                            // J'Eevee, the Imp in a Jar
 
 // Spells
+void AddSC_druid_spell_scripts();
 void AddSC_hunter_spell_scripts();
+void AddSC_item_spell_scripts();
+void AddSC_mage_spell_scripts();
+void AddSC_paladin_spell_scripts();
+void AddSC_priest_spell_scripts();
+void AddSC_rogue_spell_scripts();
+void AddSC_shaman_spell_scripts();
+void AddSC_special_spell_scripts();
+void AddSC_warlock_spell_scripts();
+void AddSC_warrior_spell_scripts();
 
 void AddScripts()
 {
@@ -477,5 +487,15 @@ void AddScripts()
 
     AddSC_npc_j_eevee();
 
+    AddSC_druid_spell_scripts();
     AddSC_hunter_spell_scripts();
+    AddSC_item_spell_scripts();
+    AddSC_mage_spell_scripts();
+    AddSC_paladin_spell_scripts();
+    AddSC_priest_spell_scripts();
+    AddSC_rogue_spell_scripts();
+    AddSC_shaman_spell_scripts();
+    AddSC_special_spell_scripts();
+    AddSC_warlock_spell_scripts();
+    AddSC_warrior_spell_scripts();
 }

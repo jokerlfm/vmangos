@@ -2060,11 +2060,10 @@ void WorldObject::MovePositionToFirstCollision(Position& pos, float dist, float 
     float destY = pos.y + dist * sin(angle);
     float destZ = pos.z;
 
-    GenericTransport* transport = GetTransport();
-
     float halfHeight = IsUnit() ? static_cast<Unit*>(this)->GetCollisionHeight() : 1.0f;
     if (IsUnit())
     {
+        GenericTransport* transport = GetTransport();
         PathFinder path(static_cast<Unit*>(this));
         Vector3 src(pos.x, pos.y, pos.z);
         Vector3 dest(destX, destY, destZ + halfHeight);
@@ -2087,19 +2086,15 @@ void WorldObject::MovePositionToFirstCollision(Position& pos, float dist, float 
 
     UpdateAllowedPositionZ(destX, destY, destZ);
     destZ += halfHeight;
-    bool colPoint = GetMap()->GetLosHitPosition(pos.x, pos.y, pos.z + halfHeight, destX, destY, destZ, -0.5f);
+    bool colPoint = GetMap()->GetLosHitPosition(pos.x, pos.y, pos.z + halfHeight, destX, destY, destZ, -1.0f);
     destZ -= halfHeight;
 
     if (colPoint)
     {
-        destX -= CONTACT_DISTANCE * cos(angle);
-        destY -= CONTACT_DISTANCE * sin(angle);
         dist = sqrt((pos.x - destX) * (pos.x - destX) + (pos.y - destY) * (pos.y - destY));
     }
 
-    colPoint = GetMap()->GetLosHitPosition(destX, destY, destZ + halfHeight, destX, destY, destZ, -0.5f);
-    if (colPoint)
-        dist = sqrt((pos.x - destX) * (pos.x - destX) + (pos.y - destY) * (pos.y - destY));
+    GetMap()->GetLosHitPosition(destX, destY, destZ + halfHeight, destX, destY, destZ, -0.5f);
 
     float step = dist / 10.0f;
     Position tempPos(destX, destY, destZ, 0.f);
@@ -2108,22 +2103,20 @@ void WorldObject::MovePositionToFirstCollision(Position& pos, float dist, float 
 
     for (int i = 0; i < 10; i++)
     {
-        if (fabs(pos.z - destZ) > ATTACK_DISTANCE)
-        {
-            previousZ = destZ;
-            destX -= step * cos(angle);
-            destY -= step * sin(angle);
-            UpdateAllowedPositionZ(destX, destY, destZ);
-            if (fabs(previousZ - destZ) > (ATTACK_DISTANCE / 2))
-                distanceZSafe = false;
-        }
-        else
+        if (fabs(pos.z - destZ) <= ATTACK_DISTANCE)
         {
             pos.x = destX;
             pos.y = destY;
             pos.z = destZ;
             break;
         }
+
+        previousZ = destZ;
+        destX -= step * cos(angle);
+        destY -= step * sin(angle);
+        UpdateAllowedPositionZ(destX, destY, destZ);
+        if (fabs(previousZ - destZ) > (ATTACK_DISTANCE * 0.5f))
+            distanceZSafe = false;
     }
 
     if (distanceZSafe)
@@ -2486,9 +2479,9 @@ Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, floa
         GetMap()->GetCreatureLinkingHolder()->DoCreatureLinkingEvent(LINKING_EVENT_RESPAWN, pCreature);
 
     pCreature->SetWorldMask(GetWorldMask());
-    // return the creature therewith the summoner has access to it
-
     IncrementSummonCounter();
+
+    // return the creature therewith the summoner has access to it
     return pCreature;
 }
 

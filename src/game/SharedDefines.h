@@ -1714,6 +1714,7 @@ enum MailResponseResult
 // in fact, these are also used elsewhere
 enum PetTameFailureReason
 {
+    PETTAME_NONE                    = 0,                    // no error, don't send to client
     PETTAME_INVALIDCREATURE         = 1,
     PETTAME_TOOMANY                 = 2,
     PETTAME_CREATUREALREADYOWNED    = 3,

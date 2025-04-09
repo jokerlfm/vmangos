@@ -546,7 +546,6 @@ enum eConfigBoolValues
     CONFIG_BOOL_BATTLEGROUND_RANDOMIZE,
     CONFIG_BOOL_SEND_LOOT_ROLL_UPON_RECONNECT,
     CONFIG_BOOL_ACCURATE_PETS,
-    CONFIG_BOOL_ACCURATE_SPELL_EFFECTS,
     CONFIG_BOOL_ACCURATE_PVE_EVENTS,
     CONFIG_BOOL_ACCURATE_LFG,
     CONFIG_BOOL_NO_RESPEC_PRICE_DECAY,
@@ -760,7 +759,7 @@ class World
 
         void SendWorldText(int32 string_id, ...);
         void SendWorldTextToBGAndQueue(int32 string_id, uint32 queuedPlayerLevel, uint32 queueType, ...);
-        void SendBroadcastTextToWorld(uint32 textId);
+        void SendBroadcastTextToWorld(uint32 textId, ObjectGuid senderGuid = ObjectGuid());
 
         // Only for GMs with ticket notification ON
         void SendGMTicketText(int32 string_id, ...);

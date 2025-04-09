@@ -1289,6 +1289,7 @@ class Unit : public SpellCaster
         void SetCharm(Unit* pet);
         void Uncharm();
         void RemoveCharmAuras(AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
+        void RemoveSummonPossessedAuras(AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
         ObjectGuid const& GetCharmGuid() const { return GetGuidValue(UNIT_FIELD_CHARM); }
         void SetCharmGuid(ObjectGuid charm) { SetGuidValue(UNIT_FIELD_CHARM, charm); }
 

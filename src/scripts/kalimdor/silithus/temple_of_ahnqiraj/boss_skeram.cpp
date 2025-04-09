@@ -6,14 +6,17 @@ EndScriptData */
 #include "scriptPCH.h"
 #include "temple_of_ahnqiraj.h"
 
-#define SAY_AGGRO_1                 -1531000
-#define SAY_AGGRO_2                 -1531001
-#define SAY_AGGRO_3                 -1531002
-#define SAY_SLAY_1                  -1531003
-#define SAY_SLAY_2                  -1531004
-#define SAY_SLAY_3                  -1531005
-#define SAY_SPLIT                   -1531006
-#define SAY_DEATH                   -1531007
+enum
+{
+    SAY_AGGRO_1 = 11445,
+    SAY_AGGRO_2 = -1531001,
+    SAY_AGGRO_3 = -1531002,
+    SAY_SLAY_1  = 11446,
+    SAY_SLAY_2  = -1531004,
+    SAY_SLAY_3  = -1531005,
+    SAY_SPLIT   = -1531006,
+    SAY_DEATH   = 11447
+};
 
 #define SPELL_ARCANE_EXPLOSION      26192
 #define SPELL_EARTH_SHOCK           26194
@@ -163,12 +166,7 @@ struct boss_skeramAI : public ScriptedAI
         if (m_pInstance && m_pInstance->GetData(TYPE_SKERAM) == IN_PROGRESS)
             return;
 
-        switch (urand(0,2))
-        {
-            case 0: DoScriptText(SAY_AGGRO_1, m_creature); break;
-            case 1: DoScriptText(SAY_AGGRO_2, m_creature); break;
-            case 2: DoScriptText(SAY_AGGRO_3, m_creature); break;
-        }
+        DoScriptText(PickRandomValue(SAY_AGGRO_1, SAY_AGGRO_2, SAY_AGGRO_3), m_creature);
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_SKERAM, IN_PROGRESS);

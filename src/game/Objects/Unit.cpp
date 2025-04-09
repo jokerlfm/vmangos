@@ -2260,6 +2260,8 @@ void Unit::AttackerStateUpdate(Unit* pVictim, WeaponAttackType attType, bool ext
     // melee attack spell casted at main hand attack only
     if (attType == BASE_ATTACK && m_currentSpells[CURRENT_MELEE_SPELL] && !extra)
     {
+        // we need to override the target otherwise its possible to hit a far away target with client modifications since melee spells skip range checks
+        m_currentSpells[CURRENT_MELEE_SPELL]->m_targets.setUnitTarget(pVictim);
         m_currentSpells[CURRENT_MELEE_SPELL]->cast();
         Spell* spell = m_currentSpells[CURRENT_MELEE_SPELL];
         if (!spell || !spell->m_spellInfo->IsNextMeleeSwingSpell() || spell->isSuccessCast())
@@ -5192,8 +5194,12 @@ void Unit::Uncharm()
     if (Unit* charm = GetCharm())
     {
         charm->RemoveCharmAuras();
+
         // Pet posses is not a typical charm
         charm->RemoveSpellsCausingAura(SPELL_AURA_MOD_POSSESS_PET);
+
+        // This effect uses a dummy on the caster
+        RemoveSummonPossessedAuras();
     }
 }
 
@@ -5202,6 +5208,22 @@ void Unit::RemoveCharmAuras(AuraRemoveMode mode)
     RemoveSpellsCausingAura(SPELL_AURA_MOD_POSSESS, mode);
     RemoveSpellsCausingAura(SPELL_AURA_MOD_CHARM, mode);
     RemoveSpellsCausingAura(SPELL_AURA_AOE_CHARM, mode);
+}
+
+void  Unit::RemoveSummonPossessedAuras(AuraRemoveMode mode)
+{
+    // these spells use dummy aura
+    for (AuraList::const_iterator iter = m_modAuras[SPELL_AURA_DUMMY].begin(); iter != m_modAuras[SPELL_AURA_DUMMY].end();)
+    {
+        if (!(*iter)->GetSpellProto()->HasEffect(SPELL_EFFECT_SUMMON_POSSESSED))
+        {
+            ++iter;
+            continue;
+        }
+
+        RemoveAurasDueToSpell((*iter)->GetId(), nullptr, mode);
+        iter = m_modAuras[SPELL_AURA_DUMMY].begin();
+    }
 }
 
 void Unit::SetPet(Pet* pet)
@@ -5488,7 +5510,7 @@ float Unit::SpellDamageBonusTaken(SpellCaster const* pCaster, SpellEntry const* 
     float takenFlatMod = SpellBaseDamageBonusTaken(spellProto->GetSpellSchoolMask());
 
     // apply benefit affected by spell power implicit coeffs and spell level penalties
-    takenFlatMod = SpellBonusWithCoeffs(spellProto, effectIndex, 0, takenFlatMod, 0, damagetype, false, pCaster, spell) * int32(stack);
+    takenFlatMod = SpellBonusWithCoeffs(spellProto, effectIndex, 0, takenFlatMod, damagetype, false, pCaster, spell) * int32(stack);
 
     if ((takenFlatMod < 0) && (-takenFlatMod > (pdamage / 2)))
         takenFlatMod = -(pdamage / 2);
@@ -5673,7 +5695,7 @@ float Unit::SpellHealingBonusTaken(SpellCaster const* pCaster, SpellEntry const*
     }
 
     // apply benefit affected by spell power implicit coeffs and spell level penalties
-    takenFlatMod = SpellBonusWithCoeffs(spellProto, effectIndex, 0, takenFlatMod, 0, damagetype, false, pCaster, spell) * int32(stack);
+    takenFlatMod = SpellBonusWithCoeffs(spellProto, effectIndex, 0, takenFlatMod, damagetype, false, pCaster, spell) * int32(stack);
 
     if ((takenFlatMod < 0) && (-takenFlatMod > (healamount / 2)))
         takenFlatMod = -(healamount / 2);
@@ -6025,7 +6047,7 @@ float Unit::MeleeDamageBonusTaken(SpellCaster const* pCaster, float pdamage, Wea
     if (!isWeaponDamageBasedSpell)
     {
         // apply benefit affected by spell power implicit coeffs and spell level penalties
-        TakenFlat = SpellBonusWithCoeffs(spellProto, effectIndex, 0, TakenFlat, 0, damagetype, false, pCaster, spell);
+        TakenFlat = SpellBonusWithCoeffs(spellProto, effectIndex, 0, TakenFlat, damagetype, false, pCaster, spell);
     }
 
     if (!flat)
@@ -7592,8 +7614,10 @@ void Unit::SetDeathState(DeathState s)
         }
 
         RemoveAllAurasOnDeath();
-        UnsummonAllTotems();
-
+        // Only unsummon totems for non-creature units (creature-owned totems should persist)
+        if (GetTypeId() != TYPEID_UNIT)
+            UnsummonAllTotems();
+            
         m_motionMaster.Clear(false, true);
         m_motionMaster.MoveIdle();
 

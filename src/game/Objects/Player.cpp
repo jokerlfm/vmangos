@@ -5193,7 +5193,7 @@ void Player::HandleBaseModValue(BaseModGroup modGroup, BaseModType modType, floa
 
 float Player::GetBaseModValue(BaseModGroup modGroup, BaseModType modType) const
 {
-    if (modGroup >= BASEMOD_END || modType > MOD_END)
+    if (modGroup < 0 || modGroup >= BASEMOD_END || modType < 0 || modType >= MOD_END)
     {
         sLog.Out(LOG_BASIC, LOG_LVL_ERROR, "trial to access nonexistent BaseModGroup or wrong BaseModType!");
         return 0.0f;
@@ -6790,8 +6790,14 @@ void Player::UpdateZone(uint32 newZone, uint32 newArea)
     }
 
     if (pvpInfo.inPvPEnforcedArea && !IsTaxiFlying()) // in hostile area
+    {
         UpdatePvP(true);
-
+        if (sWorld.IsFFAPvPRealm() && !IsGameMaster() && !HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_RESTING))
+            SetFFAPvP(true);
+    }
+    else
+        SetFFAPvP(false);
+	
     if ((zoneEntry->Flags & AREA_FLAG_CAPITAL) && !pvpInfo.inPvPEnforcedArea) // in capital city
         SetRestType(REST_TYPE_IN_CITY);
     else if (HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_RESTING) && GetRestType() != REST_TYPE_IN_TAVERN)
@@ -14952,7 +14958,7 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder* holder)
     if (timeDiff > 15 * MINUTE)
         soberFactor = 0;
     else
-        soberFactor = 1 - timeDiff / (15.0f * MINUTE);
+        soberFactor = 1.0f - float(timeDiff) / (15.0f * float(MINUTE));
     uint16 newDrunkenValue = uint16(soberFactor * m_drunk);
     SetDrunkValue(newDrunkenValue);
 
@@ -17577,27 +17583,59 @@ Creature* Player::SummonPossessedMinion(uint32 creatureId, uint32 spellId, float
     if (!GetCharmGuid().IsEmpty())
         return nullptr;
 
-    Creature* pCreature = SummonCreature(creatureId, x, y, z, ang, TEMPSUMMON_TIMED_DEATH_AND_DEAD_DESPAWN, duration, false, 0, nullptr, GetTransport());
-
-    if (!pCreature)
+    CreatureInfo const* cinfo = sObjectMgr.GetCreatureTemplate(creatureId);
+    if (!cinfo)
+    {
+        sLog.Out(LOG_DBERROR, LOG_LVL_MINIMAL, "WorldObject::SummonCreature: Creature (Entry: %u) not existed for summoner: %s. ", creatureId, GetGuidStr().c_str());
         return nullptr;
+    }
 
-    pCreature->SetFactionTemporary(GetFactionTemplateId(), TEMPFACTION_NONE);     // set same faction as player
-    pCreature->SetCharmerGuid(GetObjectGuid());                         // save guid of the charmer
+    uint32 const currentSummonCount = GetCreatureSummonCount();
+    if (currentSummonCount >= GetCreatureSummonLimit())
+    {
+        sLog.Out(LOG_BASIC, LOG_LVL_MINIMAL, "WorldObject::SummonCreature: %s in (map %u, instance %u) attempted to summon Creature (Entry: %u), but already has %u active summons",
+            GetGuidStr().c_str(), GetMapId(), GetInstanceId(), creatureId, currentSummonCount);
+
+        // Alert GMs in the next tick if we don't already have an alert scheduled
+        if (!m_summonLimitAlert)
+            m_summonLimitAlert = 1;
+
+        return nullptr;
+    }
+
+    TemporarySummon* pCreature = new TemporarySummon(GetObjectGuid());
+
+    CreatureCreatePos pos(GetMap(), x, y, z, ang);
+
+    if (x == 0.0f && y == 0.0f && z == 0.0f)
+        pos = CreatureCreatePos(this, GetOrientation(), CONTACT_DISTANCE, ang);
+
+    if (!pCreature->Create(GetMap()->GenerateLocalLowGuid(cinfo->GetHighGuid()), pos, cinfo, creatureId))
+    {
+        delete pCreature;
+        return nullptr;
+    }
+
+    if (GetTransport())
+        GetTransport()->AddPassenger(pCreature);
+
+    pCreature->SetSummonPoint(pos);
+    pCreature->SetFactionTemporary(GetFactionTemplateId(), TEMPFACTION_NONE); // set same faction as player
+    pCreature->SetCharmerGuid(GetObjectGuid());                               // save guid of the charmer
     pCreature->SetPossessorGuid(GetObjectGuid());
-    pCreature->SetUInt32Value(UNIT_CREATED_BY_SPELL, spellId);          // set the spell id used to create this
-    pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_POSSESSED);          // set flag for client that mean this unit is controlled by a player
-    pCreature->AddUnitState(UNIT_STATE_POSSESSED);                       // also set internal unit state flag
-    pCreature->SetLevel(GetLevel());                                    // set level to same level than summoner TODO:: not sure its always the case...
-    pCreature->SetWalk(IsWalking(), true);                              // sync the walking state with the summoner
-    SetCharmGuid(pCreature->GetObjectGuid());                           // save guid of charmed creature
-
+    pCreature->SetUInt32Value(UNIT_CREATED_BY_SPELL, spellId);                // set the spell id used to create this
+    pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_POSSESSED);                // set flag for client that mean this unit is controlled by a player
+    pCreature->AddUnitState(UNIT_STATE_POSSESSED);                            // also set internal unit state flag
+    pCreature->SetLevel(GetLevel());                                          // set level to same level than summoner TODO:: not sure its always the case...
+    pCreature->SetWalk(IsWalking(), true);                                    // sync the walking state with the summoner
+    SetCharmGuid(pCreature->GetObjectGuid());                                 // save guid of charmed creature
+    pCreature->SetWorldMask(GetWorldMask());
+    pCreature->Summon(TEMPSUMMON_TIMED_DEATH_AND_DEAD_DESPAWN, duration);     // add to map
+    IncrementSummonCounter();
     UnsummonPetTemporaryIfAny();
-
-    GetCamera().SetView(pCreature);                         // modify camera view to the creature view
-    pCreature->UpdateControl();                             // transfer client control to the creature after altering flags
-    SetMover(pCreature);                                    // set mover so now we know that creature is "moved" by this unit
-    SendForcedObjectUpdate();
+    GetCamera().SetView(pCreature); // modify camera view to the creature view
+    pCreature->UpdateControl();     // transfer client control to the creature
+    SetMover(pCreature);            // set mover so now we know that creature is "moved" by this unit
 
     // Initialize pet bar
     if (CharmInfo* charmInfo = pCreature->InitCharmInfo(pCreature))
@@ -20088,8 +20126,18 @@ void Player::SetClientControl(Unit const* target, uint8 allowMove) const
 
 Unit* Player::GetConfirmedMover() const
 {
+    // no mover client side, is this a fake client?
+    if (!m_session->GetClientMoverGuid())
+        return nullptr;
+
+    // all is good
     if (m_mover->GetObjectGuid() == m_session->GetClientMoverGuid())
         return m_mover;
+
+    // client has not yet confirmed mover change but is allowed to move self
+    if (IsControlledByOwnClient() && !GetPossessorGuid() && !GetCharmerGuid())
+        return (Unit*)this;
+
     return nullptr;
 }
 
@@ -20974,6 +21022,12 @@ void Player::SendChannelUpdate(uint32 time) const
     SendDirectMessage(&data);
 }
 
+void Player::UpdateChannelStartPosition()
+{
+    if (m_currentSpells[CURRENT_CHANNELED_SPELL])
+        m_currentSpells[CURRENT_CHANNELED_SPELL]->UpdateCastStartPosition();
+}
+
 bool Player::HasMovementFlag(MovementFlags f) const
 {
     return m_movementInfo.HasMovementFlag(f);
@@ -21081,13 +21135,7 @@ void Player::SetRestType(RestType restType, uint32 areaTriggerId /*= 0*/)
 {
     m_restType = restType;
     if (m_restType == REST_TYPE_NO)
-    {
         RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_RESTING);
-
-        // Set player to FFA PVP when not in rested environment.
-        if (sWorld.IsFFAPvPRealm())
-            SetFFAPvP(true);
-    }
     else
     {
         SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_RESTING);
@@ -21770,7 +21818,7 @@ void Player::RewardHonor(Unit const* pVictim, uint32 groupSize)
         return;
 
     // Honorless Target
-    if (pVictim->HasAura(2479, EFFECT_INDEX_0))
+    if (pVictim->HasAuraType(SPELL_AURA_NO_PVP_CREDIT))
         return;
 
     if (pVictim->GetTypeId() == TYPEID_UNIT)
@@ -21804,7 +21852,7 @@ void Player::RewardHonorOnDeath()
     if (sWorld.GetWowPatch() < WOW_PATCH_104 && sWorld.getConfig(CONFIG_BOOL_ACCURATE_PVP_TIMELINE))
         return;
 
-    if (GetAura(2479, EFFECT_INDEX_0))             // Honorless Target
+    if (HasAuraType(SPELL_AURA_NO_PVP_CREDIT)) // Honorless Target
         return;
 
     // " you need to be alive and close by at the time of the kill to get your share of the Honor"
@@ -22355,7 +22403,7 @@ void Player::CastHighestStealthRank()
     CastSpell(nullptr, stealthSpellEntry, true);
 }
 
-template <class T> T Player::ApplySpellMod(uint32 spellId, SpellModOp op, T &basevalue, Spell* spell)
+template <class T> T Player::ApplySpellMod(uint32 spellId, SpellModOp op, T &basevalue, Spell* spell, bool dropCharge)
 {
     SpellEntry const* spellInfo = sSpellMgr.GetSpellEntry(spellId);
     if (!spellInfo || spellInfo->HasAttribute(SPELL_ATTR_EX3_IGNORE_CASTER_MODIFIERS)) return 0;
@@ -22381,13 +22429,16 @@ template <class T> T Player::ApplySpellMod(uint32 spellId, SpellModOp op, T &bas
             totalpct += mod->value;
         }
 
+        if (dropCharge)
+        {
 #if SUPPORTED_CLIENT_BUILD > CLIENT_BUILD_1_10_2
-        // World of Warcraft Client Patch 1.11.0 (2006-06-20)
-        // - Nature's Grace: You will no longer consume this effect when casting a 
-        //   spell which was made instant by Nature's Swiftness.
-        if (!((mod->op == SPELLMOD_CASTING_TIME) && (mod->type == SPELLMOD_FLAT) && HasInstantCastingSpellMod(spellInfo)))
+            // World of Warcraft Client Patch 1.11.0 (2006-06-20)
+            // - Nature's Grace: You will no longer consume this effect when casting a 
+            //   spell which was made instant by Nature's Swiftness.
+            if (!((mod->op == SPELLMOD_CASTING_TIME) && (mod->type == SPELLMOD_FLAT) && HasInstantCastingSpellMod(spellInfo)))
 #endif
-            DropModCharge(mod, spell);
+                DropModCharge(mod, spell);
+        }
 
         // Nostalrius : fix ecorce (22812 - +1sec incant) + rapidite nature (17116 - sorts instant) = 0sec de cast
         if (mod->op == SPELLMOD_CASTING_TIME && mod->type == SPELLMOD_PCT && mod->value == -100)
@@ -22403,9 +22454,9 @@ template <class T> T Player::ApplySpellMod(uint32 spellId, SpellModOp op, T &bas
     return T(diff);
 }
 
-template int32 Player::ApplySpellMod(uint32 spellId, SpellModOp op, int32& basevalue, Spell* spell);
-template uint32 Player::ApplySpellMod(uint32 spellId, SpellModOp op, uint32& basevalue, Spell* spell);
-template float Player::ApplySpellMod(uint32 spellId, SpellModOp op, float& basevalue, Spell* spell);
+template int32 Player::ApplySpellMod(uint32 spellId, SpellModOp op, int32& basevalue, Spell* spell, bool dropCharge);
+template uint32 Player::ApplySpellMod(uint32 spellId, SpellModOp op, uint32& basevalue, Spell* spell, bool dropCharge);
+template float Player::ApplySpellMod(uint32 spellId, SpellModOp op, float& basevalue, Spell* spell, bool dropCharge);
 
 static char const* type_strings[] =
 {
@@ -22424,7 +22475,8 @@ static char const* type_strings[] =
     "GM",
     "GMCritical",
     "Anticheat",
-    "Scripts"
+    "Scripts",
+    "Movement"
 };
 
 static_assert(sizeof(type_strings) / sizeof(type_strings[0]) == LOG_TYPE_MAX, "type_strings must be updated");
