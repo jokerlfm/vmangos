@@ -45,7 +45,10 @@ public:
 
     uint32 Enable;
     uint32 Reset;
-    float BuyRate;
+    uint32 SellingItemsMax;
+    uint32 BuyingItemsMax;
+    float BuyerViewRate;
+    float BuyerBuyRate;
     int ManagerCheckDelay;
     uint32 VenderReplaceDelay_Min;
     uint32 VenderReplaceDelay_Max;

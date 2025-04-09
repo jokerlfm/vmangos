@@ -18,46 +18,47 @@
 
 class MingManager
 {
-	MingManager();
-	MingManager(MingManager const&) = delete;
-	MingManager& operator=(MingManager const&) = delete;
-	~MingManager() = default;
+    MingManager();
+    MingManager(MingManager const&) = delete;
+    MingManager& operator=(MingManager const&) = delete;
+    ~MingManager() = default;
 
 public:
-	void InitializeManager();
-	void Clean();
-	bool UpdateMing(uint32 pmDiff);
+    void InitializeManager();
+    void Clean();
+    bool UpdateMing(uint32 pDiff);
 
-	bool StringEndWith(const std::string& str, const std::string& tail);
-	bool StringStartWith(const std::string& str, const std::string& head);
-	std::vector<std::string> SplitString(std::string srcStr, std::string delimStr, bool repeatedCharIgnored);
-	std::string TrimString(std::string srcStr);
+    bool StringEndWith(const std::string& str, const std::string& tail);
+    bool StringStartWith(const std::string& str, const std::string& head);
+    std::vector<std::string> SplitString(std::string srcStr, std::string delimStr, bool repeatedCharIgnored);
+    std::string TrimString(std::string srcStr);
 
-	static MingManager* instance();
+    static MingManager* instance();
 
 private:
-	bool UpdateSeller();
-	bool UpdateBuyer();
-	void ResetSellableItems();
+    bool UpdateSeller(uint32 pDiff);
+    bool UpdateBuyer(uint32 pDiff);
+    void ResetSellableItems();
 
 public:
-	std::unordered_set<uint32> vendorUnlimitItemSet;
+    std::unordered_set<uint32> vendorUnlimitItemSet;
 
-	int32 buyerCheckDelay;
-	int32 sellerCheckDelay;
+    int32 buyerRefillDelay;
+    int32 sellerRefillDelay;
 
-	/// <summary>
-	/// class, subclass, inventory, level, entry set
-	/// </summary>
-	std::unordered_map < uint32, std::unordered_map<uint32, std::unordered_map<uint32, std::unordered_map<uint32, std::unordered_set<uint32>>>>> equipsMap;
+    /// <summary>
+    /// class, subclass, inventory, level, entry set
+    /// </summary>
+    std::unordered_map < uint32, std::unordered_map<uint32, std::unordered_map<uint32, std::unordered_map<uint32, std::unordered_set<uint32>>>>> equipsMap;
 
 private:
-	std::unordered_set<uint32> exceptionEntrySet;
-	std::unordered_map<uint32, uint32> sellableItemIDMap;
-	bool selling;
-	uint32 sellingIndex;
-	std::unordered_map<uint32, uint32> sellingItemIDMap;
-	std::set<uint32> auctionHouseIDSet;
+    std::unordered_set<uint32> exceptionEntrySet;
+    std::unordered_map<uint32, uint32> sellableItemIdMap;
+
+    std::unordered_set<uint32> toSellItemIdSet;
+    std::unordered_set<uint32> toBuyAuctionIdSet;
+    uint32 boughtCount;
+    std::set<uint32> auctionHouseIDSet;
 
 };
 

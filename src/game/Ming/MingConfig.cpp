@@ -104,7 +104,10 @@ bool MingConfig::StartMingSystem()
 
     Enable = GetIntDefault("Enable", 0);
     Reset = GetIntDefault("Reset", 0);
-    BuyRate = GetFloatDefault("BuyRate", 100.0f);
+    SellingItemsMax = GetIntDefault("SellingItemsMax", 100);
+    BuyingItemsMax = GetIntDefault("BuyingItemsMax", 100);
+    BuyerViewRate = GetFloatDefault("BuyerViewRate", 0.1f);
+    BuyerBuyRate = GetFloatDefault("BuyerBuyRate", 1.0f);
     ManagerCheckDelay = GetIntDefault("ManagerCheckDelay", 60000);
     VenderReplaceDelay_Min = GetIntDefault("VenderReplaceDelay_Min", 3600000);
     VenderReplaceDelay_Max = GetIntDefault("VenderReplaceDelay_Max", 7200000);
