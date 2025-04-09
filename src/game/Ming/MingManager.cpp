@@ -137,7 +137,7 @@ bool MingManager::UpdateSeller(uint32 pDiff)
         }
         else
         {
-            sellerRefillDelay = 1 * TimeConstants::HOUR * TimeConstants::IN_MILLISECONDS;
+            sellerRefillDelay = 2 * TimeConstants::HOUR * TimeConstants::IN_MILLISECONDS;
         }
     }
     else
