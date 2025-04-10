@@ -451,9 +451,34 @@ set (game_SRCS
     vmap/WorldModel.h
 
     Ming/MingConfig.cpp
-    Ming/MingManager.cpp
     Ming/MingConfig.h
+    Ming/MingManager.cpp
     Ming/MingManager.h
+	
+    Nier/NierConfig.cpp
+    Nier/NierConfig.h
+    Nier/NierManager.cpp
+    Nier/NierManager.h
+    Nier/Nier_Base.cpp
+    Nier/Nier_Base.h
+    Nier/Nier_Druid.cpp
+    Nier/Nier_Druid.h
+    Nier/Nier_Hunter.cpp
+    Nier/Nier_Hunter.h
+    Nier/Nier_Mage.cpp
+    Nier/Nier_Mage.h
+    Nier/Nier_Paladin.cpp
+    Nier/Nier_Paladin.h
+    Nier/Nier_Priest.cpp
+    Nier/Nier_Priest.h
+    Nier/Nier_Rogue.cpp
+    Nier/Nier_Rogue.h
+    Nier/Nier_Shaman.cpp
+    Nier/Nier_Shaman.h
+    Nier/Nier_Warlock.cpp
+    Nier/Nier_Warlock.h
+    Nier/Nier_Warrior.cpp
+    Nier/Nier_Warrior.h
 )
 
 if((${CMAKE_VERSION} VERSION_LESS "3.16") OR USE_PCH_OLD)
@@ -531,6 +556,7 @@ include_directories(
   ${OPENSSL_INCLUDE_DIR}
   ${ZLIB_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}/Ming
+  ${CMAKE_CURRENT_SOURCE_DIR}/Nier
 )
 
 if(WIN32)
@@ -577,6 +603,10 @@ source_group("Anticheat"
 
 source_group("Ming"
   REGULAR_EXPRESSION Ming
+)
+
+source_group("Nier"
+  REGULAR_EXPRESSION Nier
 )
 
 add_library(game STATIC

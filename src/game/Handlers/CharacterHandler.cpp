@@ -905,3 +905,22 @@ void WorldSession::HandleChangePlayerNameOpcodeCallBack(std::unique_ptr<QueryRes
     sObjectMgr.ChangePlayerNameInCache(guidLow, oldname, newname);
     sWorld.InvalidatePlayerDataToAllClient(guid);
 }
+
+// lfm nier 
+void WorldSession::HandlePlayerLogin_Simple(ObjectGuid pmCharacterGUID)
+{
+    if (PlayerLoading() || GetPlayer() != nullptr)
+    {
+        KickPlayer();
+        return;
+    }
+
+    LoginQueryHolder* holder = new LoginQueryHolder(GetAccountId(), pmCharacterGUID);
+    if (!holder->Initialize())
+    {
+        delete holder;                                      // delete all unprocessed queries
+        return;
+    }
+    m_playerLoading = true;
+    CharacterDatabase.DelayQueryHolderUnsafe(&chrHandler, &CharacterHandler::HandlePlayerLoginCallback, holder);
+}

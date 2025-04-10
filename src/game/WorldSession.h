@@ -281,6 +281,9 @@ class WorldSession
         WorldSession(uint32 id, WorldSocket *sock, AccountTypes sec, time_t mute_time, LocaleConstant locale);
         ~WorldSession();
 
+        // lfm nier 
+        void HandlePlayerLogin_Simple(ObjectGuid pmCharacterGUID);
+
         uint32 GetGUID() const { return m_guid; }
         AccountTypes GetSecurity() const { return m_security; }
         uint32 GetAccountId() const { return m_accountId; }

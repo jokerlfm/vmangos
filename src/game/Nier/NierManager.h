@@ -1,0 +1,98 @@
+#ifndef NIER_MANAGER_H
+#define NIER_MANAGER_H
+
+#include <string>
+#include <iostream>
+#include <sstream>
+
+#include "NierConfig.h"
+
+enum ShapeshiftSpell :uint32
+{
+    CatForm = 768,
+    DireBearForm = 9634,
+    BearForm = 5487,
+    MoonkinForm = 24858
+};
+
+class NierManager
+{
+    NierManager();
+    NierManager(NierManager const&) = delete;
+    NierManager& operator=(NierManager const&) = delete;
+    ~NierManager() = default;
+
+public:
+    void InitializeManager();
+    void UpdateNierManager(uint32 pmDiff);
+    void UpdateNierEntities(uint32 pmDiff);
+    void LogoutNiers(bool pmInstant = false);
+    void DeleteNiers();
+    bool LoginNier(uint32 pmLevel, uint32 pmCount);
+    bool NierCheck(Player* master);
+
+    bool IsPolymorphed(Unit* pmTarget);
+
+    bool HasAura(Unit* pmTarget, uint32 pmSpellId, Unit* pmCaster = NULL);
+    bool MissingAura(Unit* pmTarget, uint32 pmSpellId, Unit* pmCaster = NULL);
+    uint32 GetAuraDuration(Unit* pmTarget, uint32 pmSpellId, Unit* pmCaster = NULL);
+    uint32 GetAuraStack(Unit* pmTarget, uint32 pmSpellId, Unit* pmCaster = NULL);
+
+    Position PredictPosition(Unit* target);
+
+    void HandleChatCommand(Player* pmCommander, std::string pmContent, Player* pmTargetPlayer = nullptr, Group* pmTargetGroup = nullptr);
+    void HandlePacket(const WorldSession* pmSession, WorldPacket pmPacket);
+
+    void WhisperTo(Player* pmTarget, std::string pmContent, Language pmLanguage, Player* pmSender);
+
+    std::unordered_set<Creature*> GetCreatureSetInRange(Unit* pSearcher, uint32 pCreatureEntry, float pRange);
+
+    static NierManager* instance();
+
+public:
+    std::unordered_map<uint32, Nier_Base*> nierMap;
+    std::unordered_map<uint32, std::unordered_map<uint32, uint32>> allianceRaces;
+    std::unordered_map<uint32, std::unordered_map<uint32, uint32>> hordeRaces;
+    uint32 nameIndex;
+    std::unordered_map<uint32, std::string> nierNameMap;
+    std::unordered_map<uint32, std::unordered_map<uint32, std::string>> characterTalentTabNameMap;
+    std::unordered_set<uint32> instanceEncounterEntrySet;
+
+    // inventorytype - sub class - required level - item index, item entry
+    std::unordered_map<uint32, std::unordered_map<uint32, std::unordered_map<uint32, std::unordered_map<uint32, uint32>>>> equipsMap;
+
+private:
+    void CreateNier(uint32 pmLevel, bool pmAlliance, uint32 pmGroupRole);
+    int checkDelay;
+};
+
+class AllCreaturesOfEntryInRange_Nier
+{
+public:
+    AllCreaturesOfEntryInRange_Nier(WorldObject const* pObject, uint32 uiEntry, float fMaxRange) : m_pObject(pObject), m_uiEntry(uiEntry), m_fRange(fMaxRange) {}
+    bool operator() (Unit* pUnit)
+    {
+        if (m_uiEntry > 0)
+        {
+            if (pUnit->GetEntry() != m_uiEntry)
+            {
+                return false;
+            }
+        }
+        if (!m_pObject->IsWithinDist(pUnit, m_fRange, false))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+private:
+    WorldObject const* m_pObject;
+    uint32 m_uiEntry;
+    float m_fRange;
+};
+
+#define sNierManager NierManager::instance()
+
+#endif
