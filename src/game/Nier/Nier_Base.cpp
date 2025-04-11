@@ -42,9 +42,12 @@ Nier_Base::Nier_Base()
 
     me = nullptr;
     actionTarget = new NierActionTarget();
+    isRobot = false;
     specialty = 0;
     accountState = NierAccountState::NierAccountState_None;
     actionState = NierActionState::NierActionState_None;
+
+    groupRole = NierGroupRole::NierGroupRole_DPS;
 }
 
 void Nier_Base::Prepare()

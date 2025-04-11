@@ -10,7 +10,7 @@
 class Nier_Warrior :public Nier_Base
 {
 public:
-	Nier_Warrior(Player* pmMe);
+    Nier_Warrior();
     void Update(uint32 pmDiff);
     void InitializeCharacter(uint32 pmTargetLevel, uint32 pmSpecialtyTabIndex);
     void ResetTalent();

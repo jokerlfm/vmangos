@@ -1,6 +1,10 @@
 #ifndef NIER_MANAGER_H
 #define NIER_MANAGER_H
 
+#ifndef NIER_MANAGER_CHECK_DELAY
+#define NIER_MANAGER_CHECK_DELAY 500
+#endif
+
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -24,12 +28,12 @@ class NierManager
 
 public:
     void InitializeManager();
-    void UpdateNierManager(uint32 pmDiff);
-    void UpdateNierEntities(uint32 pmDiff);
+    void UpdateNierManager(uint32 pDiff);
+    void UpdateNiers(uint32 pDiff);
     void LogoutNiers(bool pmInstant = false);
     void DeleteNiers();
-    bool LoginNier(uint32 pmLevel, uint32 pmCount);
-    bool NierCheck(Player* master);
+    bool CreateNier(uint32 pMasterId, uint32 pClass);
+    bool LoginNiers(uint32 pMasterId);
 
     bool IsPolymorphed(Unit* pmTarget);
 
@@ -40,7 +44,8 @@ public:
 
     Position PredictPosition(Unit* target);
 
-    void HandleChatCommand(Player* pmCommander, std::string pmContent, Player* pmTargetPlayer = nullptr, Group* pmTargetGroup = nullptr);
+    void HandleNierChatCommand(Player* pCommander, std::string pContent);
+    void HandleNierChatCommand(Player* pCommander, std::vector<std::string> pCommandVector, uint32 pNierId);
     void HandlePacket(const WorldSession* pmSession, WorldPacket pmPacket);
 
     void WhisperTo(Player* pmTarget, std::string pmContent, Language pmLanguage, Player* pmSender);
@@ -62,7 +67,6 @@ public:
     std::unordered_map<uint32, std::unordered_map<uint32, std::unordered_map<uint32, std::unordered_map<uint32, uint32>>>> equipsMap;
 
 private:
-    void CreateNier(uint32 pmLevel, bool pmAlliance, uint32 pmGroupRole);
     int checkDelay;
 };
 

@@ -1,6 +1,6 @@
 #include "Nier_Warlock.h"
 
-Nier_Warlock::Nier_Warlock(Player* pmMe) :Nier_Base(pmMe)
+Nier_Warlock::Nier_Warlock() :Nier_Base()
 {
     curseType = WarlockCurseType::WarlockCurseType_Weakness;
     curseDelay = 0;

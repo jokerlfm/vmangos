@@ -2,7 +2,7 @@
 #include "World.h"
 #include "Pet.h"
 
-Nier_Hunter::Nier_Hunter(Player* pmMe) :Nier_Base(pmMe)
+Nier_Hunter::Nier_Hunter() :Nier_Base()
 {
     specialty = 0;
 

@@ -14,7 +14,7 @@ enum HunterAspectType :uint32
 class Nier_Hunter :public Nier_Base
 {
 public:
-    Nier_Hunter(Player* me);
+    Nier_Hunter();
     void InitializeCharacter(uint32 pmTargetLevel, uint32 pmSpecialtyTabIndex);
     void ResetTalent();
     bool InitializeEquipments(bool pmReset);

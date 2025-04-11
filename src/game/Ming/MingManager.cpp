@@ -207,7 +207,7 @@ bool MingManager::UpdateSeller(uint32 pDiff)
                             aho->AddAuction(auctionEntry);
                             auctionEntry->SaveToDB();
 
-                            sLog.Out(LOG_BASIC, LOG_LVL_BASIC, "Auction %s added for auctionhouse %d", proto->Name1, ahID);
+                            sLog.Out(LOG_BASIC, LogLevel::LOG_LVL_DETAIL, "Auction %s added for auctionhouse %d", proto->Name1, ahID);
                         }
                     }
                 }
@@ -286,6 +286,10 @@ bool MingManager::UpdateBuyer(uint32 pDiff)
                                 basePrice = basePrice * checkItem->GetCount();
                                 float buyRate = sMingConfig.BuyerBuyRate;
                                 if (vendorUnlimitItemSet.find(aeIT->second->itemTemplate) != vendorUnlimitItemSet.end())
+                                {
+                                    buyRate = buyRate / 2.0f;
+                                }
+                                if (destIT->Class == ItemClass::ITEM_CLASS_WEAPON || destIT->Class == ItemClass::ITEM_CLASS_ARMOR)
                                 {
                                     buyRate = buyRate / 2.0f;
                                 }

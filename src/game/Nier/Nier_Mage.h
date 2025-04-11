@@ -6,7 +6,7 @@
 class Nier_Mage :public Nier_Base
 {
 public:    
-    Nier_Mage(Player* pmMe);
+    Nier_Mage();
     void InitializeCharacter(uint32 pmTargetLevel, uint32 pmSpecialtyTabIndex);
     void ResetTalent();
     bool InitializeEquipments(bool pmReset);

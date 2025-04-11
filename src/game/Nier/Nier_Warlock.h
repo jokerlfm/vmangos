@@ -14,7 +14,7 @@ enum WarlockCurseType :uint32
 class Nier_Warlock :public Nier_Base
 {
 public:
-    Nier_Warlock(Player* pmMe);
+    Nier_Warlock();
 
     uint32 curseType;
     int curseDelay;

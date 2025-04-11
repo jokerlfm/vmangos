@@ -31,7 +31,7 @@ enum PaladinSealType :uint32
 class Nier_Paladin :public Nier_Base
 {
 public:
-    Nier_Paladin(Player* pmMe);
+    Nier_Paladin();
     void InitializeCharacter(uint32 pmTargetLevel, uint32 pmSpecialtyTabIndex);
     void ResetTalent();
     bool InitializeEquipments(bool pmReset);

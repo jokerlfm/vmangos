@@ -1,7 +1,7 @@
 #include "Nier_Mage.h"
 #include "World.h"
 
-Nier_Mage::Nier_Mage(Player* pmMe) :Nier_Base(pmMe)
+Nier_Mage::Nier_Mage() :Nier_Base()
 {
     spell_IcyVeins = 0;
     spell_ColdSnap = 0;

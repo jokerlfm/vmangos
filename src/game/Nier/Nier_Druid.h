@@ -6,7 +6,7 @@
 class Nier_Druid :public Nier_Base
 {
 public:
-    Nier_Druid(Player* pmMe);
+    Nier_Druid();
     void InitializeCharacter(uint32 pmTargetLevel, uint32 pmSpecialtyTabIndex);
     void ResetTalent();
     bool InitializeEquipments(bool pmReset);

@@ -61,6 +61,13 @@ enum NierActionState :uint32
     NierActionState_Rest,
 };
 
+enum NierGroupRole :uint32
+{
+    NierGroupRole_DPS = 0,
+    NierGroupRole_Tank,
+    NierGroupRole_Healer
+};
+
 class NierActionTarget
 {
 public:
@@ -134,6 +141,7 @@ public:
 
     Player* me;
     NierActionTarget* actionTarget;
+    bool isRobot;
 
     uint32 specialty;
     uint32 accountState;
@@ -148,6 +156,8 @@ public:
     uint32 target_race;
     uint32 target_class;
     uint32 target_specialty;
+
+    uint32 groupRole;
 };
 
 #endif
