@@ -24,7 +24,7 @@ void NierActionTarget::Reset()
 {
     duration = 0;
     timeLimit = 0;
-    targetUnit = nullptr;
+    targetUnit = nullptr;    
 }
 
 Nier_Base::Nier_Base()
@@ -48,6 +48,8 @@ Nier_Base::Nier_Base()
     actionState = NierActionState::NierActionState_None;
 
     groupRole = NierGroupRole::NierGroupRole_DPS;
+
+    assembleDelay = 0;
 }
 
 void Nier_Base::Prepare()
@@ -714,9 +716,26 @@ bool Nier_Base::Idle()
     return true;
 }
 
-bool Nier_Base::Attack(Unit* pmTarget)
+bool Nier_Base::Attack(Unit* pTarget)
 {
-    return false;
+    if (!me)
+    {
+        return false;
+    }
+    if (!me->IsAlive())
+    {
+        return false;
+    }
+    if (!me->IsValidAttackTarget(pTarget))
+    {
+        return false;
+    }
+    if (!me->IsInRange(pTarget, 0, VISIBILITY_DISTANCE_NORMAL))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 bool Nier_Base::Interrupt(Unit* pmTarget)
@@ -729,9 +748,30 @@ bool Nier_Base::DPS(Unit* pmTarget, bool pmRushing, bool pmChasing, float pmDist
     return false;
 }
 
-bool Nier_Base::Tank(Unit* pmTarget, bool aoe)
+bool Nier_Base::Tank(Unit* pTarget)
 {
-    return false;
+    if (groupRole != NierGroupRole::NierGroupRole_Tank)
+    {
+        return false;
+    }
+    if (!me)
+    {
+        return false;
+    }
+    if (!me->IsAlive())
+    {
+        return false;
+    }
+    if (!me->IsValidAttackTarget(pTarget))
+    {
+        return false;
+    }
+    if (!me->IsInRange(pTarget, 0, VISIBILITY_DISTANCE_NORMAL))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 bool Nier_Base::Follow(Unit* pmFollowTarget, float pmDistance)
@@ -795,9 +835,22 @@ bool Nier_Base::Assist(int pmRTI)
     return false;
 }
 
-bool Nier_Base::Revive(Player* pmTarget)
+bool Nier_Base::Revive(Unit* pTarget)
 {
-    return false;
+    if (!me)
+    {
+        return false;
+    }
+    if (!me->IsAlive())
+    {
+        return false;
+    }
+    if (pTarget->GetTypeId() != TypeID::TYPEID_PLAYER)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 bool Nier_Base::Petting(bool pmSummon, bool pmReset)

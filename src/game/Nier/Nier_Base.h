@@ -59,6 +59,7 @@ enum NierActionState :uint32
     NierActionState_Cast,
     NierActionState_Assist,
     NierActionState_Rest,
+    NierActionState_Freeze,
 };
 
 enum NierGroupRole :uint32
@@ -92,10 +93,10 @@ public:
     virtual bool UpdateNierAccount(uint32 pElapsed);
     virtual bool UpdateNierAction(uint32 pElapsed);
     virtual bool UpdateNierAwareness(uint32 pElapsed);
-    virtual bool Attack(Unit* pmTarget);
+    virtual bool Attack(Unit* pTarget);
     virtual bool Interrupt(Unit* pmTarget);
     virtual bool DPS(Unit* pmTarget, bool pmRushing, bool pmChasing, float pmDistanceMax = DEFAULT_COMBAT_REACH, float pmDistanceMin = CONTACT_DISTANCE);
-    virtual bool Tank(Unit* pmTarget, bool aoe);
+    virtual bool Tank(Unit* pTarget);
     virtual bool Heal(Unit* pmTarget, bool pmInstantOnly);
     virtual bool Follow(Unit* pmFollowTarget, float pmDistance);
     virtual bool ReadyTank(Unit* pmTarget);
@@ -105,7 +106,7 @@ public:
     virtual bool Buff(Unit* pmTarget);
     virtual bool Mark(Unit* pmTarget, int pmRTI);
     virtual bool Assist(int pmRTI);
-    virtual bool Revive(Player* pmTarget);
+    virtual bool Revive(Unit* pTarget);
     virtual bool Petting(bool pmSummon = true, bool pmReset = false);
     virtual void InitializeCharacter(uint32 pmTargetLevel);
     virtual void ResetTalent();
@@ -158,6 +159,8 @@ public:
     uint32 target_specialty;
 
     uint32 groupRole;
+
+    int assembleDelay;
 };
 
 #endif

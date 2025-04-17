@@ -46,7 +46,7 @@ public:
 
     void HandleNierChatCommand(Player* pCommander, std::string pContent);
     void HandleNierChatCommand(Player* pCommander, std::vector<std::string> pCommandVector, uint32 pNierId);
-    void HandlePacket(const WorldSession* pmSession, WorldPacket pmPacket);
+    void HandlePacket(const WorldSession* pSession, WorldPacket pPacket);
 
     void WhisperTo(Player* pmTarget, std::string pmContent, Language pmLanguage, Player* pmSender);
 
