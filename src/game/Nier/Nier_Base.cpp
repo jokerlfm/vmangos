@@ -858,12 +858,12 @@ bool Nier_Base::Petting(bool pmSummon, bool pmReset)
     return false;
 }
 
-void Nier_Base::InitializeCharacter(uint32 pmTargetLevel)
+void Nier_Base::InitializeCharacter(uint32 pTargetLevel)
 {
 
 }
 
-void Nier_Base::ResetTalent()
+void Nier_Base::ResetTalentsAndSpells()
 {
 
 }

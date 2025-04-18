@@ -7,8 +7,8 @@ class Nier_Mage :public Nier_Base
 {
 public:    
     Nier_Mage();
-    void InitializeCharacter(uint32 pmTargetLevel, uint32 pmSpecialtyTabIndex);
-    void ResetTalent();
+    void InitializeCharacter(uint32 pTargetLevel);
+    void ResetTalentsAndSpells();
     bool InitializeEquipments(bool pmReset);
     void Prepare();
     bool DPS(Unit* pmTarget, bool pmRushing, float pmDistanceMax, float pmDistanceMin, bool pmHolding, bool pmInstantOnly, bool pmChasing);

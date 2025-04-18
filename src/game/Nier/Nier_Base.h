@@ -108,8 +108,8 @@ public:
     virtual bool Assist(int pmRTI);
     virtual bool Revive(Unit* pTarget);
     virtual bool Petting(bool pmSummon = true, bool pmReset = false);
-    virtual void InitializeCharacter(uint32 pmTargetLevel);
-    virtual void ResetTalent();
+    virtual void InitializeCharacter(uint32 pTargetLevel);
+    virtual void ResetTalentsAndSpells();
     virtual bool InitializeEquipments(bool pmReset = false);
 
     bool Idle();

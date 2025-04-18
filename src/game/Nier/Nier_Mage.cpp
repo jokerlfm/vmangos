@@ -42,22 +42,22 @@ Nier_Mage::Nier_Mage() :Nier_Base()
     spell_Portal_Undercity = 0;
 }
 
-void Nier_Mage::InitializeCharacter(uint32 pmTargetLevel, uint32 pmSpecialtyTabIndex)
+void Nier_Mage::InitializeCharacter(uint32 pTargetLevel)
 {
     if (!me)
     {
         return;
     }
-    specialty = pmSpecialtyTabIndex;
+    specialty = 0;
     me->ClearInCombat();
     uint32 myLevel = me->GetLevel();
-    if (myLevel != pmTargetLevel)
+    if (myLevel != pTargetLevel)
     {
-        me->GiveLevel(pmTargetLevel);
+        me->GiveLevel(pTargetLevel);
         me->LearnDefaultSpells();
         me->LearnQuestRewardedSpells();
 
-        ResetTalent();
+        ResetTalentsAndSpells();
         RemoveEquipments();
         myLevel = me->GetLevel();
     }
@@ -342,7 +342,7 @@ void Nier_Mage::InitializeCharacter(uint32 pmTargetLevel, uint32 pmSpecialtyTabI
     sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, msgStream.str().c_str());
 }
 
-void Nier_Mage::ResetTalent()
+void Nier_Mage::ResetTalentsAndSpells()
 {
     if (!me)
     {

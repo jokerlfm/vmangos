@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2009-2011 MaNGOSZero <https://github.com/mangos/zero>
  * Copyright (C) 2011-2016 Nostalrius <https://nostalrius.org>
@@ -40,6 +40,13 @@
 #include "CellImpl.h"
 #include "Anticheat.h"
 #include "AccountMgr.h"
+
+// lfm ming
+#include "MingManager.h"
+
+ // lfm nier 
+#include "NierManager.h"
+#include "Nier_Base.h"
 
 bool WorldSession::CheckChatMessageValidity(char* msg, uint32 lang, uint32 msgType)
 {
@@ -711,6 +718,32 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recv_data)
         }
 
         break;
+    }
+
+    // lfm nier 
+    if (Nier_Base* nb = sNierManager->GetNier(_player->GetSession()->GetAccountId()))
+    {
+        if (!nb->isRobot)
+        {
+            uint32 targetNierId = 0;
+            if (type == ChatMsg::CHAT_MSG_SAY)
+            {
+                targetNierId = nb->nier_id;
+            }
+            else if (type == ChatMsg::CHAT_MSG_WHISPER)
+            {
+                if (MasterPlayer* toPlayer = ObjectAccessor::FindMasterPlayer(to.c_str()))
+                {
+                    targetNierId = toPlayer->GetSession()->GetAccountId();
+                }
+            }
+            else if (type == ChatMsg::CHAT_MSG_PARTY || type == ChatMsg::CHAT_MSG_RAID_LEADER)
+            {
+                targetNierId = -1;
+            }
+            std::vector<std::string> commandVector = sMingManager->SplitString(msg, " ", true);
+            sNierManager->HandleNierChatCommand(_player, commandVector, targetNierId);
+        }
     }
 }
 

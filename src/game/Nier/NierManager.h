@@ -35,6 +35,8 @@ public:
     bool CreateNier(uint32 pMasterId, uint32 pClass);
     bool LoginNiers(uint32 pMasterId);
 
+    Nier_Base* GetNier(uint32 pNierId);
+
     bool IsPolymorphed(Unit* pmTarget);
 
     bool HasAura(Unit* pmTarget, uint32 pmSpellId, Unit* pmCaster = NULL);
@@ -44,8 +46,7 @@ public:
 
     Position PredictPosition(Unit* target);
 
-    void HandleNierChatCommand(Player* pCommander, std::string pContent);
-    void HandleNierChatCommand(Player* pCommander, std::vector<std::string> pCommandVector, uint32 pNierId);
+    void HandleNierChatCommand(Player* pCommander, std::vector<std::string> pCommandVector, int pNierId);
     void HandlePacket(const WorldSession* pSession, WorldPacket pPacket);
 
     void WhisperTo(Player* pmTarget, std::string pmContent, Language pmLanguage, Player* pmSender);

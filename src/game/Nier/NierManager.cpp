@@ -158,7 +158,7 @@ void NierManager::InitializeManager()
         do
         {
             Field* fields = nierQR->Fetch();
-            uint32 nier_id= fields[0].GetUInt32();
+            uint32 nier_id = fields[0].GetUInt32();
             uint32 master_id = fields[1].GetUInt32();
             std::string account_name = fields[2].GetString();
             uint32 character_id = fields[3].GetUInt32();
@@ -177,8 +177,8 @@ void NierManager::InitializeManager()
             }
             case CLASS_PALADIN:
             {
-nb = new Nier_Paladin();
-break;
+                nb = new Nier_Paladin();
+                break;
             }
             case CLASS_HUNTER:
             {
@@ -268,7 +268,7 @@ void NierManager::UpdateNierManager(uint32 pmDiff)
     }
     if (checkDelay < 0)
     {
-        checkDelay = NIER_MANAGER_CHECK_DELAY;        
+        checkDelay = NIER_MANAGER_CHECK_DELAY;
         std::unordered_map<uint32, WorldSession*> allSessions = sWorld.GetAllSessions();
         for (std::unordered_map<uint32, WorldSession*>::iterator wsIT = allSessions.begin(); wsIT != allSessions.end(); wsIT++)
         {
@@ -627,6 +627,17 @@ bool NierManager::LoginNiers(uint32 pMasterId)
     return true;
 }
 
+Nier_Base* NierManager::GetNier(uint32 pNierId)
+{
+    if (nierMap.find(pNierId) == nierMap.end())
+    {
+        nierMap[pNierId] = new Nier_Base();
+        nierMap[pNierId]->isRobot = false;
+    }
+
+    return nierMap[pNierId];
+}
+
 bool NierManager::IsPolymorphed(Unit* pmTarget)
 {
     if (pmTarget)
@@ -680,25 +691,44 @@ Position NierManager::PredictPosition(Unit* target)
     return pos;
 }
 
-void NierManager::HandleNierChatCommand(Player* pCommander, std::string pContent)
+/// <summary>
+/// 
+/// </summary>
+/// <param name="pCommander"></param>
+/// <param name="pCommandVector"></param>
+/// <param name="pNierId">
+///  -1 group, 0 say, 1+ whisper
+/// </param>
+void NierManager::HandleNierChatCommand(Player* pCommander, std::vector<std::string> pCommandVector, int pNierId)
 {
     if (!pCommander)
     {
         return;
     }
-    std::vector<std::string> pCommandVector = sMingManager->SplitString(pContent, " ", true);
-    // todo : analysis command range 
-    Player* targetPlayer = nullptr;
-    uint32 nierId = targetPlayer->GetSession()->GetAccountId();
-    HandleNierChatCommand(pCommander, pCommandVector, nierId);
-}
-
-void NierManager::HandleNierChatCommand(Player* pCommander, std::vector<std::string> pCommandVector, uint32 pNierId)
-{
-    if (nierMap.find(pNierId) != nierMap.end())
+    if (pNierId == 0)
     {
-        Nier_Base* nb = nierMap[pNierId];
-        if (nb)
+        return;
+    }
+    else if (pNierId < 0)
+    {
+        if (Group* commanderGroup = pCommander->GetGroup())
+        {
+            for (GroupReference* itr = commanderGroup->GetFirstMember(); itr != nullptr; itr = itr->next())
+            {
+                if (Player* target = itr->getSource())
+                {
+                    if (target->GetObjectGuid() != pCommander->GetObjectGuid())
+                    {
+                        uint32 eachNierId = target->GetGUIDLow();
+                        HandleNierChatCommand(pCommander, pCommandVector, eachNierId);
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        if (Nier_Base* nb = GetNier(pNierId))
         {
             std::string commandName = pCommandVector.at(0);
             if (commandName == "role")
@@ -734,7 +764,7 @@ void NierManager::HandleNierChatCommand(Player* pCommander, std::vector<std::str
                 }
                 if (nb->me)
                 {
-                    WhisperTo(pCommander, replyStream.str(), Language::LANG_UNIVERSAL, nb->me);
+                    nb->me->Say(replyStream.str().c_str(), Language::LANG_UNIVERSAL);
                 }
                 else
                 {
@@ -767,7 +797,7 @@ void NierManager::HandleNierChatCommand(Player* pCommander, std::vector<std::str
                 if (nb->isRobot)
                 {
                     if (nb->me)
-                    {                        
+                    {
                         nb->assembleDelay = urand(10000, 20000);
                         int assembleSeconds = nb->assembleDelay / 1000;
                         std::ostringstream replyStream;
