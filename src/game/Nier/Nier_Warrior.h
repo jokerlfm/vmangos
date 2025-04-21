@@ -1,5 +1,5 @@
-#ifndef NIER_ACTION_WARRIOR_H
-#define NIER_ACTION_WARRIOR_H
+#ifndef NIER_WARRIOR_H
+#define NIER_WARRIOR_H
 
 #ifndef DEFAULT_WARRIOR_SPELL_DELAY
 #define DEFAULT_WARRIOR_SPELL_DELAY 20000
@@ -7,19 +7,22 @@
 
 #include "Nier_Base.h"
 
+class Nier_Base;
+
 class Nier_Warrior :public Nier_Base
 {
 public:
     Nier_Warrior();
-    void Update(uint32 pmDiff);
-    void InitializeCharacter(uint32 pmTargetLevel, uint32 pmSpecialtyTabIndex);
-    void ResetTalent();
-    bool InitializeEquipments(bool pmReset);
-    void Prepare();
-    bool Tank(Unit* pmTarget, bool aoe);
-    bool Buff(Unit* pmTarget);
-
-    ObjectGuid ogVigilanceTarget;
+    bool Attack(Unit* pTarget);
+    bool Tank(Unit* pTarget);
+    bool Heal(Unit* pTarget);
+    bool Follow(Unit* pTarget);
+    bool Cure(Unit* pTarget);
+    bool Buff(Unit* pTarget);
+    bool Revive(Unit* pTarget);
+    bool InitializeCharacter(uint32 pTargetLevel);
+    bool ResetTalentsAndSpells();
+    bool InitializeEquipments(bool pmReset = false);
 
 private:
     uint32 spell_DefensiveStance;

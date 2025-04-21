@@ -1,31 +1,17 @@
 #include "Nier_Base.h"
-#include "World.h"
-#include "Group.h"
-#include "Player.h"
-#include "Pet.h"
-#include "CreatureAI.h"
-#include "Spell.h"
-#include "GridNotifiers.h"
-#include "Map.h"
-#include "SpellMgr.h"
-#include "SpellAuras.h"
-#include "Bag.h"
-#include "TargetedMovementGenerator.h"
+
 #include "AccountMgr.h"
+#include "Bag.h"
+#include "Spell.h"
+#include "SpellAuras.h"
+#include "SpellMgr.h"
+#include "Map.h"
+#include "MotionMaster.h"
+#include "Item.h"
+#include "Player.h"
+#include "Group.h"
+#include "CreatureAI.h"
 
-NierActionTarget::NierActionTarget()
-{
-    duration = 0;
-    timeLimit = 0;
-    targetUnit = nullptr;
-}
-
-void NierActionTarget::Reset()
-{
-    duration = 0;
-    timeLimit = 0;
-    targetUnit = nullptr;    
-}
 
 Nier_Base::Nier_Base()
 {
@@ -68,11 +54,6 @@ void Nier_Base::Prepare()
             }
         }
     }
-}
-
-void Nier_Base::Reset()
-{
-    ClearTarget();
 }
 
 void Nier_Base::Update(uint32 pDiff)
@@ -258,7 +239,7 @@ bool Nier_Base::UpdateNierAccount(uint32 pElapsed)
             sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_ERROR, "No available names");
             accountState = NierAccountState::NierAccountState_None;
             checkDelay = urand(5 * MINUTE * IN_MILLISECONDS, 10 * MINUTE * IN_MILLISECONDS);
-            return;
+            return false;
         }
         uint8 gender = 0, skin = 0, face = 0, hairStyle = 0, hairColor = 0, facialHair = 0;
         while (true)
@@ -571,13 +552,7 @@ bool Nier_Base::UpdateNierAwareness(uint32 pElapsed)
                                 }
                             }
                         }
-                        if (enemy)
-                        {
-                            actionState = NierActionState::NierActionState_Attack;
-                            actionTarget->Reset();
-                            actionTarget->targetUnit = enemy;
-                            actionTarget->timeLimit = 20000;
-                        }
+                        Attack(enemy);
                     }
                     else
                     {
@@ -738,16 +713,6 @@ bool Nier_Base::Attack(Unit* pTarget)
     return true;
 }
 
-bool Nier_Base::Interrupt(Unit* pmTarget)
-{
-    return false;
-}
-
-bool Nier_Base::DPS(Unit* pmTarget, bool pmRushing, bool pmChasing, float pmDistanceMax, float pmDistanceMin)
-{
-    return false;
-}
-
 bool Nier_Base::Tank(Unit* pTarget)
 {
     if (groupRole != NierGroupRole::NierGroupRole_Tank)
@@ -774,7 +739,12 @@ bool Nier_Base::Tank(Unit* pTarget)
     return true;
 }
 
-bool Nier_Base::Follow(Unit* pmFollowTarget, float pmDistance)
+bool Nier_Base::Heal(Unit* pTarget)
+{
+    return false;
+}
+
+bool Nier_Base::Follow(Unit* pTarget)
 {
     if (!me)
     {
@@ -788,49 +758,19 @@ bool Nier_Base::Follow(Unit* pmFollowTarget, float pmDistance)
     {
         return true;
     }
-    if (!pmFollowTarget)
+    if (!pTarget)
     {
         return false;
     }
-    ChooseTarget(pmFollowTarget);
+    ChooseTarget(pTarget);
 }
 
-bool Nier_Base::Heal(Unit* pmTarget, bool pmInstantOnly)
+bool Nier_Base::Cure(Unit* pTarget)
 {
     return false;
 }
 
-bool Nier_Base::ReadyTank(Unit* pmTarget)
-{
-    return false;
-}
-
-bool Nier_Base::GroupHeal(Unit* pmTarget, bool pmInstantOnly)
-{
-    return false;
-}
-
-bool Nier_Base::SimpleHeal(Unit* pmTarget, bool pmInstantOnly)
-{
-    return false;
-}
-
-bool Nier_Base::Cure(Unit* pmTarget)
-{
-    return false;
-}
-
-bool Nier_Base::Buff(Unit* pmTarget)
-{
-    return false;
-}
-
-bool Nier_Base::Mark(Unit* pmTarget, int pmRTI)
-{
-    return false;
-}
-
-bool Nier_Base::Assist(int pmRTI)
+bool Nier_Base::Buff(Unit* pTarget)
 {
     return false;
 }
@@ -853,19 +793,25 @@ bool Nier_Base::Revive(Unit* pTarget)
     return true;
 }
 
-bool Nier_Base::Petting(bool pmSummon, bool pmReset)
+bool Nier_Base::InitializeCharacter(uint32 pTargetLevel)
 {
-    return false;
+    if (!me)
+    {
+        return false;
+    }
+
+    return true;
 }
 
-void Nier_Base::InitializeCharacter(uint32 pTargetLevel)
+bool Nier_Base::ResetTalentsAndSpells()
 {
+    if (!me)
+    {
+        return false;
+    }
+    me->ResetTalents(true);
 
-}
-
-void Nier_Base::ResetTalentsAndSpells()
-{
-
+    return true;
 }
 
 bool Nier_Base::InitializeEquipments(bool pmReset)

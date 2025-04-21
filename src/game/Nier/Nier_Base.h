@@ -1,5 +1,5 @@
-#ifndef NIER_ACTION_BASE_H
-#define NIER_ACTION_BASE_H
+#ifndef NIER_BASE_H
+#define NIER_BASE_H
 
 #ifndef DEFAULT_ACTION_LIMIT_DELAY
 #define DEFAULT_ACTION_LIMIT_DELAY 5000
@@ -13,16 +13,9 @@
 #define DEFAULT_MOVEMENT_CHECK_DELAY 500
 #endif
 
-#include "Nier/NierConfig.h"
-#include "Nier/NierManager.h"
-#include "MotionMaster.h"
-#include "Item.h"
-#include "Player.h"
-#include "Group.h"
-#include "Spell.h"
-#include "SpellAuras.h"
-#include "SpellMgr.h"
-#include "Map.h"
+#include "NierConfig.h"
+#include "NierManager.h"
+#include "NierActionTarget.h"
 
 enum NierAccountState :uint32
 {
@@ -69,53 +62,32 @@ enum NierGroupRole :uint32
     NierGroupRole_Healer
 };
 
-class NierActionTarget
-{
-public:
-    NierActionTarget();
-    void Reset();
-
-public:
-    uint32 duration;
-    uint32 timeLimit;
-
-    Unit* targetUnit;
-    Position targetPos;
-};
-
 class Nier_Base
 {
 public:
     Nier_Base();
-    virtual void Reset();
-    virtual void Prepare();
-    virtual void Update(uint32 pDiff);
-    virtual bool UpdateNierAccount(uint32 pElapsed);
-    virtual bool UpdateNierAction(uint32 pElapsed);
-    virtual bool UpdateNierAwareness(uint32 pElapsed);
     virtual bool Attack(Unit* pTarget);
-    virtual bool Interrupt(Unit* pmTarget);
-    virtual bool DPS(Unit* pmTarget, bool pmRushing, bool pmChasing, float pmDistanceMax = DEFAULT_COMBAT_REACH, float pmDistanceMin = CONTACT_DISTANCE);
-    virtual bool Tank(Unit* pTarget);
-    virtual bool Heal(Unit* pmTarget, bool pmInstantOnly);
-    virtual bool Follow(Unit* pmFollowTarget, float pmDistance);
-    virtual bool ReadyTank(Unit* pmTarget);
-    virtual bool GroupHeal(Unit* pmTarget, bool pmInstantOnly);
-    virtual bool SimpleHeal(Unit* pmTarget, bool pmInstantOnly);
-    virtual bool Cure(Unit* pmTarget);
-    virtual bool Buff(Unit* pmTarget);
-    virtual bool Mark(Unit* pmTarget, int pmRTI);
-    virtual bool Assist(int pmRTI);
-    virtual bool Revive(Unit* pTarget);
-    virtual bool Petting(bool pmSummon = true, bool pmReset = false);
-    virtual void InitializeCharacter(uint32 pTargetLevel);
-    virtual void ResetTalentsAndSpells();
-    virtual bool InitializeEquipments(bool pmReset = false);
+    bool Tank(Unit* pTarget);
+    bool Heal(Unit* pTarget);
+    bool Follow(Unit* pTarget);
+    bool Cure(Unit* pTarget);
+    bool Buff(Unit* pTarget);
+    bool Revive(Unit* pTarget);
+    bool InitializeCharacter(uint32 pTargetLevel);
+    bool ResetTalentsAndSpells();
+    bool InitializeEquipments(bool pmReset = false);
+
+    void Prepare();
+    void Update(uint32 pDiff);
+    bool UpdateNierAccount(uint32 pElapsed);
+    bool UpdateNierAction(uint32 pElapsed);
+    bool UpdateNierAwareness(uint32 pElapsed);
 
     bool Idle();
     bool Wander();
     bool PVE();
     bool PVP();
+
     void RemoveEquipments();
     void LearnTalent(uint32 pmTalentId, uint32 pmMaxRank = MAX_TALENT_RANK);
     void TrainSpells(uint32 pmTrainerEntry);
@@ -162,5 +134,4 @@ public:
 
     int assembleDelay;
 };
-
 #endif

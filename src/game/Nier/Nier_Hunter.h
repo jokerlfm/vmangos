@@ -1,5 +1,5 @@
-#ifndef NIER_ACTION_HUNTER_H
-#define NIER_ACTION_HUNTER_H
+#ifndef NIER_HUNTER_H
+#define NIER_HUNTER_H
 
 #include "Nier_Base.h"
 
@@ -11,18 +11,22 @@ enum HunterAspectType :uint32
     HunterAspectType_Pack,
 };
 
+class Nier_Base;
+
 class Nier_Hunter :public Nier_Base
 {
 public:
     Nier_Hunter();
-    void InitializeCharacter(uint32 pmTargetLevel, uint32 pmSpecialtyTabIndex);
-    void ResetTalent();
-    bool InitializeEquipments(bool pmReset);
-    void Prepare();
-    bool DPS(Unit* pmTarget, bool pmRushing, float pmDistanceMax, float pmDistanceMin, bool pmHolding, bool pmInstantOnly, bool pmChasing);
-    bool AOE(Unit* pmTarget, bool pmRushing, float pmDistanceMax, float pmDistanceMin, bool pmHolding, bool pmInstantOnly, bool pmChasing);
-    bool Buff(Unit* pmTarget);
-    bool Petting(bool pmSummon = true, bool pmReset = false);
+    bool Attack(Unit* pTarget);
+    bool Tank(Unit* pTarget);
+    bool Heal(Unit* pTarget);
+    bool Follow(Unit* pTarget);
+    bool Cure(Unit* pTarget);
+    bool Buff(Unit* pTarget);
+    bool Revive(Unit* pTarget);
+    bool InitializeCharacter(uint32 pTargetLevel);
+    bool ResetTalentsAndSpells();
+    bool InitializeEquipments(bool pmReset = false);
 
     uint32 aspectType;
 

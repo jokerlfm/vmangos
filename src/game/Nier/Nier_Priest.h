@@ -1,26 +1,25 @@
-#ifndef NIER_ACTION_PRIEST_H
-#define NIER_ACTION_PRIEST_H
+#ifndef NIER_PRIEST_H
+#define NIER_PRIEST_H
 
 #include "Nier_Base.h"
+
+class Nier_Base;
 
 class Nier_Priest :public Nier_Base
 {
 public:
     Nier_Priest();
-    void InitializeCharacter(uint32 pmTargetLevel, uint32 pmSpecialtyTabIndex);
-    void ResetTalent();
-    bool InitializeEquipments(bool pmReset);
-    void Prepare();
-    bool Heal(Unit* pmTarget, bool pmInstantOnly);
-    bool ReadyTank(Unit* pmTarget);
-    bool GroupHeal(Unit* pmTarget, bool pmInstantOnly);
-    bool SimpleHeal(Unit* pmTarget, bool pmInstantOnly);
-    bool Cure(Unit* pmTarget);
-    bool Buff(Unit* pmTarget);
-    bool Revive(Player* pmTarget);
+    bool Attack(Unit* pTarget);
+    bool Tank(Unit* pTarget);
+    bool Heal(Unit* pTarget);
+    bool Follow(Unit* pTarget);
+    bool Cure(Unit* pTarget);
+    bool Buff(Unit* pTarget);
+    bool Revive(Unit* pTarget);
+    bool InitializeCharacter(uint32 pTargetLevel);
+    bool ResetTalentsAndSpells();
+    bool InitializeEquipments(bool pmReset = false);
 
-    bool Heal_Discipline(Unit* pmTarget, bool pmInstantOnly);
-    bool Heal_Holy(Unit* pmTarget, bool pmInstantOnly);
 private:
     uint32 spell_Renew;
     uint32 spell_LesserHeal;

@@ -1,5 +1,4 @@
 #include "Nier_Mage.h"
-#include "World.h"
 
 Nier_Mage::Nier_Mage() :Nier_Base()
 {
@@ -42,12 +41,91 @@ Nier_Mage::Nier_Mage() :Nier_Base()
     spell_Portal_Undercity = 0;
 }
 
-void Nier_Mage::InitializeCharacter(uint32 pTargetLevel)
+bool Nier_Mage::Attack(Unit* pTarget)
 {
-    if (!me)
+    if (!Nier_Base::Attack(pTarget))
     {
-        return;
+        return false;
     }
+
+    if (spell_Frostbolt > 0)
+    {
+        if (CastSpell(pTarget, spell_Frostbolt))
+        {
+            return true;
+        }
+    }
+
+    return true;
+}
+
+bool Nier_Mage::Tank(Unit* pTarget)
+{
+    if (!Nier_Base::Tank(pTarget))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool Nier_Mage::Heal(Unit* pTarget)
+{
+    if (!Nier_Base::Heal(pTarget))
+    {
+        return false;
+    }
+
+    return false;
+}
+
+bool Nier_Mage::Follow(Unit* pTarget)
+{
+    if (!Nier_Base::Follow(pTarget))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool Nier_Mage::Cure(Unit* pTarget)
+{
+    if (!Nier_Base::Cure(pTarget))
+    {
+        return false;
+    }
+
+    return false;
+}
+
+bool Nier_Mage::Buff(Unit* pTarget)
+{
+    if (!Nier_Base::Buff(pTarget))
+    {
+        return false;
+    }
+
+    return false;
+}
+
+bool Nier_Mage::Revive(Unit* pTarget)
+{
+    if (!Nier_Base::Revive(pTarget))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool Nier_Mage::InitializeCharacter(uint32 pTargetLevel)
+{
+    if (!Nier_Base::InitializeCharacter(pTargetLevel))
+    {
+        return false;
+    }
+
     specialty = 0;
     me->ClearInCombat();
     uint32 myLevel = me->GetLevel();
@@ -340,15 +418,16 @@ void Nier_Mage::InitializeCharacter(uint32 pTargetLevel)
     std::ostringstream msgStream;
     msgStream << me->GetName() << " initialized";
     sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, msgStream.str().c_str());
+
+    return true;
 }
 
-void Nier_Mage::ResetTalentsAndSpells()
+bool Nier_Mage::ResetTalentsAndSpells()
 {
-    if (!me)
+    if (!Nier_Base::ResetTalentsAndSpells())
     {
-        return;
+        return false;
     }
-    me->ResetTalents(true);
 
     // talent tab : 61 - frost 
     LearnTalent(37);
@@ -395,6 +474,8 @@ void Nier_Mage::ResetTalentsAndSpells()
     TrainSpells(27703);
     TrainSpells(27705);
     TrainSpells(29156);
+
+    return true;
 }
 
 bool Nier_Mage::InitializeEquipments(bool pmReset)
@@ -553,603 +634,4 @@ bool Nier_Mage::InitializeEquipments(bool pmReset)
     }
 
     return true;
-}
-
-void Nier_Mage::Prepare()
-{
-    Nier_Base::Prepare();
-    if (!me)
-    {
-        return;
-    }
-    else if (!me->IsAlive())
-    {
-        return;
-    }
-
-    me->Say("Prepared", Language::LANG_UNIVERSAL);
-}
-
-bool Nier_Mage::DPS(Unit* pmTarget, bool pmRushing, float pmDistanceMax, float pmDistanceMin, bool pmHolding, bool pmInstantOnly, bool pmChasing)
-{
-    if (!me)
-    {
-        return false;
-    }
-    else if (!me->IsAlive())
-    {
-        return false;
-    }
-    if (me->IsNonMeleeSpellCasted(false, false, true))
-    {
-        return true;
-    }
-    if (!pmTarget)
-    {
-        return false;
-    }
-    else if (!pmTarget->IsAlive())
-    {
-        if (me->GetTargetGuid() == pmTarget->GetObjectGuid())
-        {
-            ClearTarget();
-        }
-        return false;
-    }
-    else if (!me->IsValidAttackTarget(pmTarget))
-    {
-        if (me->GetTargetGuid() == pmTarget->GetObjectGuid())
-        {
-            ClearTarget();
-        }
-        return false;
-    }
-    else if (pmTarget->IsImmuneToDamage(SpellSchoolMask::SPELL_SCHOOL_MASK_NORMAL))
-    {
-        if (me->GetTargetGuid() == pmTarget->GetObjectGuid())
-        {
-            ClearTarget();
-        }
-        return false;
-    }
-    if (!pmTarget->CanSeeInWorld(me))
-    {
-        if (me->GetTargetGuid() == pmTarget->GetObjectGuid())
-        {
-            ClearTarget();
-        }
-        return false;
-    }
-    if (pmChasing)
-    {
-        if (!nm->Chase(pmTarget, pmDistanceMax, pmDistanceMin))
-        {
-            if (me->GetTargetGuid() == pmTarget->GetObjectGuid())
-            {
-                ClearTarget();
-            }
-            return false;
-        }
-    }
-    ChooseTarget(pmTarget);
-    float targetDistance = me->GetDistance(pmTarget);
-    if (targetDistance > NIER_MAX_DISTANCE)
-    {
-        return true;
-    }
-    if (me->GetPowerPercent(Powers::POWER_MANA) < 30.0f)
-    {
-        //if (me->HasItemCount(item_ManaGem, 1))
-        //{
-        //	Item* pGem = GetItemInInventory(item_ManaGem);
-        //	if (pGem && !pGem->IsInTrade())
-        //	{
-        //		if (UseItem(pGem, me))
-        //		{
-        //			return true;
-        //		}
-        //	}
-        //}
-        if (spell_Evocation > 0)
-        {
-            if (CastSpell(me, spell_ColdSnap))
-            {
-                return true;
-            }
-        }
-        ManaPotion();
-    }
-    if (pmRushing)
-    {
-        if (spell_IcyVeins > 0)
-        {
-            if (!me->HasAura(spell_IcyVeins))
-            {
-                if (!me->HasSpellCooldown(spell_IcyVeins))
-                {
-                    CastSpell(me, spell_IcyVeins);
-                }
-                else
-                {
-                    if (spell_ColdSnap > 0)
-                    {
-                        CastSpell(me, spell_ColdSnap);
-                    }
-                }
-            }
-        }
-        if (spell_MirrorImage > 0)
-        {
-            if (!me->HasSpellCooldown(spell_MirrorImage))
-            {
-                if (CastSpell(me, spell_MirrorImage))
-                {
-                    return true;
-                }
-            }
-        }
-        if (spell_SummonWaterElemental > 0)
-        {
-            if (!me->HasSpellCooldown(spell_SummonWaterElemental))
-            {
-                if (CastSpell(me, spell_SummonWaterElemental))
-                {
-                    return true;
-                }
-            }
-        }
-    }
-    if (me->HasAura(aura_Fireball))
-    {
-        if (spell_FrostfireBolt > 0)
-        {
-            if (CastSpell(pmTarget, spell_FrostfireBolt))
-            {
-                return true;
-            }
-        }
-        if (CastSpell(pmTarget, spell_Fireball))
-        {
-            return true;
-        }
-    }
-    bool canFreeze = false;
-    if (spell_FrostNova > 0)
-    {
-        if (pmTarget->HasAura(spell_FrostNova))
-        {
-            canFreeze = true;
-        }
-        else if (pmTarget->HasAura(aura_Frostbite))
-        {
-            canFreeze = true;
-        }
-        else if (me->HasAura(aura_Fingers_Of_Frost))
-        {
-            canFreeze = true;
-        }
-    }
-    if (canFreeze)
-    {
-        if (spell_DeepFreeze > 0)
-        {
-            if (CastSpell(pmTarget, spell_DeepFreeze))
-            {
-                return true;
-            }
-        }
-        if (spell_IceLance > 0)
-        {
-            if (CastSpell(pmTarget, spell_IceLance))
-            {
-                return true;
-            }
-        }
-    }
-    if (targetDistance < INTERACTION_DISTANCE)
-    {
-        if (spell_FrostNova > 0)
-        {
-            if (spell_IceBlock > 0)
-            {
-                if (pmTarget->GetTargetGuid() == me->GetObjectGuid())
-                {
-                    if (me->HasSpellCooldown(spell_FrostNova))
-                    {
-                        if (CastSpell(me, spell_IceBlock))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-            if (CastSpell(me, spell_FrostNova))
-            {
-                return true;
-            }
-        }
-    }
-    if (targetDistance < NIER_NORMAL_DISTANCE)
-    {
-        if (spell_Cone_Of_Cold > 0)
-        {
-            if (CastSpell(me, spell_Cone_Of_Cold))
-            {
-                return true;
-            }
-        }
-        if (spell_FrostNova > 0)
-        {
-            if (CastSpell(me, spell_FrostNova))
-            {
-                return true;
-            }
-        }
-    }
-    if (pmInstantOnly)
-    {
-        if (spell_IceLance > 0)
-        {
-            if (CastSpell(pmTarget, spell_IceLance))
-            {
-                return true;
-            }
-        }
-    }
-    else
-    {
-        if (spell_Frostbolt > 0)
-        {
-            if (CastSpell(pmTarget, spell_Frostbolt))
-            {
-                return true;
-            }
-        }
-    }
-
-    return true;
-}
-
-bool Nier_Mage::AOE(Unit* pmTarget, bool pmRushing, float pmDistanceMax, float pmDistanceMin, bool pmHolding, bool pmInstantOnly, bool pmChasing)
-{
-    if (!me)
-    {
-        return false;
-    }
-    else if (!me->IsAlive())
-    {
-        return false;
-    }
-    if (me->IsNonMeleeSpellCasted(false, false, true))
-    {
-        return true;
-    }
-    if (!pmTarget)
-    {
-        return false;
-    }
-    else if (!pmTarget->IsAlive())
-    {
-        if (me->GetTargetGuid() == pmTarget->GetObjectGuid())
-        {
-            ClearTarget();
-        }
-        return false;
-    }
-    else if (!me->IsValidAttackTarget(pmTarget))
-    {
-        if (me->GetTargetGuid() == pmTarget->GetObjectGuid())
-        {
-            ClearTarget();
-        }
-        return false;
-    }
-    else if (pmTarget->IsImmuneToDamage(SpellSchoolMask::SPELL_SCHOOL_MASK_NORMAL))
-    {
-        if (me->GetTargetGuid() == pmTarget->GetObjectGuid())
-        {
-            ClearTarget();
-        }
-        return false;
-    }
-    if (!pmTarget->CanSeeInWorld(me))
-    {
-        if (me->GetTargetGuid() == pmTarget->GetObjectGuid())
-        {
-            ClearTarget();
-        }
-        return false;
-    }
-    if (pmChasing)
-    {
-        if (!nm->Chase(pmTarget, pmDistanceMax, pmDistanceMin))
-        {
-            if (me->GetTargetGuid() == pmTarget->GetObjectGuid())
-            {
-                ClearTarget();
-            }
-            return false;
-        }
-    }
-    ChooseTarget(pmTarget);
-    float targetDistance = me->GetDistance(pmTarget);
-    if (targetDistance > NIER_FAR_DISTANCE)
-    {
-        return true;
-    }
-    if (me->GetPowerPercent(Powers::POWER_MANA) < 30.0f)
-    {
-        ManaPotion();
-    }
-    if (!pmInstantOnly)
-    {
-        if (spell_Blizzard > 0)
-        {
-            if (CastSpell(pmTarget, spell_Blizzard))
-            {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-bool Nier_Mage::Cure(Unit* pmTarget)
-{
-    if (!me)
-    {
-        return false;
-    }
-    else if (!me->IsAlive())
-    {
-        return false;
-    }
-    if (!pmTarget)
-    {
-        return false;
-    }
-    else if (!pmTarget->IsAlive())
-    {
-        return false;
-    }
-    float targetDistance = me->GetDistance(pmTarget);
-    if (targetDistance > NIER_MAX_DISTANCE)
-    {
-        return false;
-    }
-
-    std::multimap< uint32, SpellAuraHolder*> sahMap = pmTarget->GetSpellAuraHolderMap();
-    for (std::multimap< uint32, SpellAuraHolder*>::iterator sahIT = sahMap.begin(); sahIT != sahMap.end(); sahIT++)
-    {
-        if (SpellAuraHolder* eachSAH = sahIT->second)
-        {
-            if (const SpellEntry* pS = eachSAH->GetSpellProto())
-            {
-                if (!pS->IsPositiveSpell())
-                {
-                    if (pS->Dispel == DispelType::DISPEL_CURSE)
-                    {
-                        if (CastSpell(pmTarget, spell_RemoveCurse))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    return false;
-}
-
-bool Nier_Mage::Buff(Unit* pmTarget)
-{
-    if (!me)
-    {
-        return false;
-    }
-    else if (!me->IsAlive())
-    {
-        return false;
-    }
-    if (!pmTarget)
-    {
-        return false;
-    }
-    else if (!pmTarget->IsAlive())
-    {
-        return false;
-    }
-    if (me->GetObjectGuid() == pmTarget->GetObjectGuid())
-    {
-        if (spell_ConjureManaGem > 0)
-        {
-            if (!me->HasItemCount(item_ManaGem, 1))
-            {
-                CastSpell(me, spell_ConjureManaGem);
-            }
-        }
-        if (spell_MageArmor > 0)
-        {
-            CastSpell(me, spell_MageArmor, true);
-        }
-    }
-    float targetDistance = me->GetDistance(pmTarget);
-    if (targetDistance > NIER_MAX_DISTANCE)
-    {
-        return false;
-    }
-
-    bool doBuff = true;
-    if (spell_ArcaneBrilliance > 0 || spell_ArcaneIntellect > 0)
-    {
-        if (!pmTarget->HasAura(spell_ArcaneBrilliance) && !pmTarget->HasAura(spell_ArcaneIntellect))
-        {
-            if (spell_ArcaneBrilliance > 0)
-            {
-                if (CastSpell(pmTarget, spell_ArcaneBrilliance))
-                {
-                    return true;
-                }
-            }
-            else if (spell_ArcaneIntellect > 0)
-            {
-                if (CastSpell(pmTarget, spell_ArcaneIntellect))
-                {
-                    return true;
-                }
-            }
-        }
-    }
-
-    return false;
-}
-
-bool Nier_Mage::Mark(Unit* pmTarget, int pmRTI)
-{
-    if (pmRTI >= 0)
-    {
-        if (spell_Polymorph > 0)
-        {
-            if (me)
-            {
-                if (pmTarget)
-                {
-                    if (Group* myGroup = me->GetGroup())
-                    {
-                        if (myGroup->GetTargetIconByGuid(pmTarget->GetObjectGuid()) < 0)
-                        {
-                            if (Creature* targetC = (Creature*)pmTarget)
-                            {
-                                if (const CreatureInfo* ci = targetC->GetCreatureInfo())
-                                {
-                                    if (ci->type == CreatureType::CREATURE_TYPE_HUMANOID || ci->type == CreatureType::CREATURE_TYPE_BEAST)
-                                    {
-                                        if (const SpellEntry* pS = sSpellMgr.GetSpellEntry(spell_Polymorph))
-                                        {
-                                            if (!targetC->IsImmuneToSpell(pS, false))
-                                            {
-                                                if (me->IsValidAttackTarget(targetC))
-                                                {
-                                                    myGroup->SetTargetIcon(pmRTI, pmTarget->GetObjectGuid());
-                                                    return true;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    return false;
-}
-
-bool Nier_Mage::Assist(int pmRTI)
-{
-    if (pmRTI >= 0)
-    {
-        if (spell_Polymorph > 0)
-        {
-            if (me)
-            {
-                if (me->IsAlive())
-                {
-                    if (Group* myGroup = me->GetGroup())
-                    {
-                        ObjectGuid ogRTI = myGroup->GetGuidByTargetIcon(pmRTI);
-                        if (!ogRTI.IsEmpty())
-                        {
-                            if (Unit* rtiTarget = ObjectAccessor::GetUnit(*me, ogRTI))
-                            {
-                                bool canAssist = false;
-                                if (Creature* targetC = (Creature*)rtiTarget)
-                                {
-                                    if (const CreatureInfo* ci = targetC->GetCreatureInfo())
-                                    {
-                                        if (ci->type == CreatureType::CREATURE_TYPE_HUMANOID || ci->type == CreatureType::CREATURE_TYPE_BEAST)
-                                        {
-                                            if (const SpellEntry* pS = sSpellMgr.GetSpellEntry(spell_Polymorph))
-                                            {
-                                                if (!targetC->IsImmuneToSpell(pS, false))
-                                                {
-                                                    if (me->IsValidAttackTarget(targetC))
-                                                    {
-                                                        canAssist = true;
-                                                        if (me->GetDistance(targetC) < NIER_FAR_DISTANCE)
-                                                        {
-                                                            int duration = 0;
-                                                            if (Aura* activeAura = targetC->GetAura(spell_Polymorph, SpellEffectIndex::EFFECT_INDEX_0))
-                                                            {
-                                                                duration = activeAura->GetAuraDuration();
-                                                            }
-                                                            if (duration < 2000)
-                                                            {
-                                                                if (CastSpell(rtiTarget, spell_Polymorph))
-                                                                {
-                                                                    return true;
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    me->Say("Target is immune to polymorph.", Language::LANG_UNIVERSAL);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                if (!canAssist)
-                                {
-                                    myGroup->SetTargetIcon(pmRTI, ObjectGuid());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    return false;
-}
-
-uint32 Nier_Mage::Caution()
-{
-    if (me)
-    {
-        if (me->IsAlive())
-        {
-            if (spell_Blink > 0)
-            {
-                if (CastSpell(me, spell_Blink))
-                {
-                    return 500;
-                }
-            }
-            float startAngle = me->GetOrientation() + M_PI / 4;
-            float angleGap = 0.0f;
-            Position pos;
-            while (angleGap < M_PI * 2)
-            {
-                me->GetNearPoint(me, pos.x, pos.y, pos.z, 0.0f, NIER_NORMAL_DISTANCE + MELEE_RANGE, startAngle + angleGap);
-                if (me->GetDistance(pos.x, pos.y, pos.z) > NIER_NORMAL_DISTANCE - CONTACT_DISTANCE)
-                {
-                    me->InterruptNonMeleeSpells(false);
-                    me->GetMotionMaster()->Clear();
-                    me->GetMotionMaster()->MovePoint(0, pos.x, pos.y, pos.z);
-                    return 2000;
-                }
-            }
-        }
-    }
-
-    return 0;
 }

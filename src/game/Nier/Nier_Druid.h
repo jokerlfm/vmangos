@@ -1,5 +1,5 @@
-#ifndef NIER_ACTION_DRUID_H
-#define NIER_ACTION_DRUID_H
+#ifndef NIER_DRUID_H
+#define NIER_DRUID_H
 
 #include "Nier_Base.h"
 
@@ -7,17 +7,16 @@ class Nier_Druid :public Nier_Base
 {
 public:
     Nier_Druid();
-    void InitializeCharacter(uint32 pmTargetLevel, uint32 pmSpecialtyTabIndex);
-    void ResetTalent();
-    bool InitializeEquipments(bool pmReset);
-    void Prepare();
-    bool DPS(Unit* pmTarget, bool pmRushing, float pmDistanceMax, float pmDistanceMin, bool pmHolding, bool pmInstantOnly, bool pmChasing);
-    bool AOE(Unit* pmTarget, bool pmRushing, float pmDistanceMax, float pmDistanceMin, bool pmHolding, bool pmInstantOnly, bool pmChasing);
-    bool Cure(Unit* pmTarget);
-    bool Buff(Unit* pmTarget);
-    bool Revive(Player* pmTarget);
-    bool Mark(Unit* pmTarget, int pmRTI);
-    bool Assist(int pmRTI);    
+    bool Attack(Unit* pTarget);
+    bool Tank(Unit* pTarget);
+    bool Heal(Unit* pTarget);
+    bool Follow(Unit* pTarget);
+    bool Cure(Unit* pTarget);
+    bool Buff(Unit* pTarget);
+    bool Revive(Unit* pTarget);
+    bool InitializeCharacter(uint32 pTargetLevel);
+    bool ResetTalentsAndSpells();
+    bool InitializeEquipments(bool pmReset = false);
 
 public:
     uint32 spell_InsectSwarm;

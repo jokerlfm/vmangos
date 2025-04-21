@@ -9,7 +9,10 @@
 #include <iostream>
 #include <sstream>
 
+#include "MingManager.h"
+
 #include "NierConfig.h"
+#include "Nier_Base.h"
 
 enum ShapeshiftSpell :uint32
 {
@@ -18,6 +21,8 @@ enum ShapeshiftSpell :uint32
     BearForm = 5487,
     MoonkinForm = 24858
 };
+
+class Nier_Base;
 
 class NierManager
 {

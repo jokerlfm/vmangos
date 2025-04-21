@@ -1,28 +1,27 @@
-#ifndef NIER_ACTION_MAGE_H
-#define NIER_ACTION_MAGE_H
+#ifndef NIER_MAGE_H
+#define NIER_MAGE_H
 
 #include "Nier_Base.h"
 
 class Nier_Mage :public Nier_Base
 {
-public:    
+public:
     Nier_Mage();
-    void InitializeCharacter(uint32 pTargetLevel);
-    void ResetTalentsAndSpells();
-    bool InitializeEquipments(bool pmReset);
-    void Prepare();
-    bool DPS(Unit* pmTarget, bool pmRushing, float pmDistanceMax, float pmDistanceMin, bool pmHolding, bool pmInstantOnly, bool pmChasing);
-    bool AOE(Unit* pmTarget, bool pmRushing, float pmDistanceMax, float pmDistanceMin, bool pmHolding, bool pmInstantOnly, bool pmChasing);
-    bool Cure(Unit* pmTarget);
-    bool Buff(Unit* pmTarget);
-    bool Mark(Unit* pmTarget, int pmRTI);
-    bool Assist(int pmRTI);
-    uint32 Caution();
+    bool Attack(Unit* pTarget);
+    bool Tank(Unit* pTarget);
+    bool Heal(Unit* pTarget);
+    bool Follow(Unit* pTarget);
+    bool Cure(Unit* pTarget);
+    bool Buff(Unit* pTarget);
+    bool Revive(Unit* pTarget);
+    bool InitializeCharacter(uint32 pTargetLevel);
+    bool ResetTalentsAndSpells();
+    bool InitializeEquipments(bool pmReset = false);
 
 public:
     uint32 spell_IcyVeins;
     uint32 spell_ColdSnap;
-    uint32 spell_DeepFreeze;    
+    uint32 spell_DeepFreeze;
     uint32 spell_ArcaneIntellect;
     uint32 spell_ArcaneBrilliance;
     uint32 spell_Blizzard;

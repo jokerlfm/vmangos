@@ -1,6 +1,4 @@
 #include "NierManager.h"
-#include "NierConfig.h"
-#include "Nier_Base.h"
 #include "Nier_Druid.h"
 #include "Nier_Hunter.h"
 #include "Nier_Mage.h"
@@ -10,8 +8,6 @@
 #include "Nier_Shaman.h"
 #include "Nier_Warlock.h"
 #include "Nier_Warrior.h"
-
-#include "MingManager.h"
 
 #include "CellImpl.h"
 #include "GridNotifiers.h"
@@ -170,51 +166,51 @@ void NierManager::InitializeManager()
             Nier_Base* nb = nullptr;
             switch (target_class)
             {
-            case CLASS_WARRIOR:
-            {
-                nb = new Nier_Warrior();
-                break;
-            }
-            case CLASS_PALADIN:
-            {
-                nb = new Nier_Paladin();
-                break;
-            }
-            case CLASS_HUNTER:
-            {
-                nb = new Nier_Hunter();
-                break;
-            }
-            case CLASS_ROGUE:
-            {
-                nb = new Nier_Rogue();
-                break;
-            }
-            case CLASS_PRIEST:
-            {
-                nb = new Nier_Priest();
-                break;
-            }
-            case CLASS_SHAMAN:
-            {
-                nb = new Nier_Shaman();
-                break;
-            }
-            case CLASS_MAGE:
-            {
-                nb = new Nier_Mage();
-                break;
-            }
-            case CLASS_WARLOCK:
-            {
-                nb = new Nier_Warlock();
-                break;
-            }
-            case CLASS_DRUID:
-            {
-                nb = new Nier_Druid();
-                break;
-            }
+            //case CLASS_WARRIOR:
+            //{
+            //    nb = new Nier_Warrior();
+            //    break;
+            //}
+            //case CLASS_PALADIN:
+            //{
+            //    nb = new Nier_Paladin();
+            //    break;
+            //}
+            //case CLASS_HUNTER:
+            //{
+            //    nb = new Nier_Hunter();
+            //    break;
+            //}
+            //case CLASS_ROGUE:
+            //{
+            //    nb = new Nier_Rogue();
+            //    break;
+            //}
+            //case CLASS_PRIEST:
+            //{
+            //    nb = new Nier_Priest();
+            //    break;
+            //}
+            //case CLASS_SHAMAN:
+            //{
+            //    nb = new Nier_Shaman();
+            //    break;
+            //}
+            //case CLASS_MAGE:
+            //{
+            //    nb = new Nier_Mage();
+            //    break;
+            //}
+            //case CLASS_WARLOCK:
+            //{
+            //    nb = new Nier_Warlock();
+            //    break;
+            //}
+            //case CLASS_DRUID:
+            //{
+            //    nb = new Nier_Druid();
+            //    break;
+            //}
             default:
             {
                 break;
@@ -434,51 +430,51 @@ bool NierManager::CreateNier(uint32 pMasterId, uint32 pClass)
                     Nier_Base* nb = nullptr;
                     switch (pClass)
                     {
-                    case CLASS_WARRIOR:
-                    {
-                        nb = new Nier_Warrior();
-                        break;
-                    }
-                    case CLASS_PALADIN:
-                    {
-                        nb = new Nier_Paladin();
-                        break;
-                    }
-                    case CLASS_HUNTER:
-                    {
-                        nb = new Nier_Hunter();
-                        break;
-                    }
-                    case CLASS_ROGUE:
-                    {
-                        nb = new Nier_Rogue();
-                        break;
-                    }
-                    case CLASS_PRIEST:
-                    {
-                        nb = new Nier_Priest();
-                        break;
-                    }
-                    case CLASS_SHAMAN:
-                    {
-                        nb = new Nier_Shaman();
-                        break;
-                    }
-                    case CLASS_MAGE:
-                    {
-                        nb = new Nier_Mage();
-                        break;
-                    }
-                    case CLASS_WARLOCK:
-                    {
-                        nb = new Nier_Warlock();
-                        break;
-                    }
-                    case CLASS_DRUID:
-                    {
-                        nb = new Nier_Druid();
-                        break;
-                    }
+                    //case CLASS_WARRIOR:
+                    //{
+                    //    nb = new Nier_Warrior();
+                    //    break;
+                    //}
+                    //case CLASS_PALADIN:
+                    //{
+                    //    nb = new Nier_Paladin();
+                    //    break;
+                    //}
+                    //case CLASS_HUNTER:
+                    //{
+                    //    nb = new Nier_Hunter();
+                    //    break;
+                    //}
+                    //case CLASS_ROGUE:
+                    //{
+                    //    nb = new Nier_Rogue();
+                    //    break;
+                    //}
+                    //case CLASS_PRIEST:
+                    //{
+                    //    nb = new Nier_Priest();
+                    //    break;
+                    //}
+                    //case CLASS_SHAMAN:
+                    //{
+                    //    nb = new Nier_Shaman();
+                    //    break;
+                    //}
+                    //case CLASS_MAGE:
+                    //{
+                    //    nb = new Nier_Mage();
+                    //    break;
+                    //}
+                    //case CLASS_WARLOCK:
+                    //{
+                    //    nb = new Nier_Warlock();
+                    //    break;
+                    //}
+                    //case CLASS_DRUID:
+                    //{
+                    //    nb = new Nier_Druid();
+                    //    break;
+                    //}
                     default:
                     {
                         break;
@@ -534,51 +530,51 @@ bool NierManager::LoginNiers(uint32 pMasterId)
         {
             switch (target_class)
             {
-            case CLASS_WARRIOR:
-            {
-                nb = new Nier_Warrior();
-                break;
-            }
-            case CLASS_PALADIN:
-            {
-                nb = new Nier_Paladin();
-                break;
-            }
-            case CLASS_HUNTER:
-            {
-                nb = new Nier_Hunter();
-                break;
-            }
-            case CLASS_ROGUE:
-            {
-                nb = new Nier_Rogue();
-                break;
-            }
-            case CLASS_PRIEST:
-            {
-                nb = new Nier_Priest();
-                break;
-            }
-            case CLASS_SHAMAN:
-            {
-                nb = new Nier_Shaman();
-                break;
-            }
-            case CLASS_MAGE:
-            {
-                nb = new Nier_Mage();
-                break;
-            }
-            case CLASS_WARLOCK:
-            {
-                nb = new Nier_Warlock();
-                break;
-            }
-            case CLASS_DRUID:
-            {
-                nb = new Nier_Druid();
-                break;
-            }
+            //case CLASS_WARRIOR:
+            //{
+            //    nb = new Nier_Warrior();
+            //    break;
+            //}
+            //case CLASS_PALADIN:
+            //{
+            //    nb = new Nier_Paladin();
+            //    break;
+            //}
+            //case CLASS_HUNTER:
+            //{
+            //    nb = new Nier_Hunter();
+            //    break;
+            //}
+            //case CLASS_ROGUE:
+            //{
+            //    nb = new Nier_Rogue();
+            //    break;
+            //}
+            //case CLASS_PRIEST:
+            //{
+            //    nb = new Nier_Priest();
+            //    break;
+            //}
+            //case CLASS_SHAMAN:
+            //{
+            //    nb = new Nier_Shaman();
+            //    break;
+            //}
+            //case CLASS_MAGE:
+            //{
+            //    nb = new Nier_Mage();
+            //    break;
+            //}
+            //case CLASS_WARLOCK:
+            //{
+            //    nb = new Nier_Warlock();
+            //    break;
+            //}
+            //case CLASS_DRUID:
+            //{
+            //    nb = new Nier_Druid();
+            //    break;
+            //}
             default:
             {
                 break;
@@ -1002,7 +998,6 @@ void NierManager::HandlePacket(const WorldSession* pSession, WorldPacket pPacket
                             wpAccept << uint32(0);
                             receiver->GetSession()->HandleGroupAcceptOpcode(wpAccept);
                             std::ostringstream replyStream_Talent;
-                            nb->Reset();
                             if (Player* inviter = ObjectAccessor::FindPlayer(grp->GetLeaderGuid()))
                             {
                                 WhisperTo(inviter, "Greetings! Master", Language::LANG_UNIVERSAL, receiver);
@@ -1058,7 +1053,6 @@ void NierManager::HandlePacket(const WorldSession* pSession, WorldPacket pPacket
                         {
                             receiver->ResurectUsingRequestData();
                             receiver->ClearInCombat();
-                            nb->Reset();
                         }
                     }
                     break;
