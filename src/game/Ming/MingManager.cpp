@@ -13,7 +13,6 @@ MingManager::MingManager()
     boughtCount = 0;
     sellableItemIdMap.clear();
     exceptionEntrySet.clear();
-    equipsMap.clear();
 }
 
 MingManager* MingManager::instance()
@@ -207,7 +206,7 @@ bool MingManager::UpdateSeller(uint32 pDiff)
                             aho->AddAuction(auctionEntry);
                             auctionEntry->SaveToDB();
 
-                            sLog.Out(LOG_BASIC, LogLevel::LOG_LVL_DETAIL, "Auction %s added for auctionhouse %d", proto->Name1, ahID);
+                            //sLog.Out(LOG_BASIC, LogLevel::LOG_LVL_DETAIL, "Auction %s added for auctionhouse %d", proto->Name1, ahID);
                         }
                     }
                 }
@@ -251,7 +250,7 @@ bool MingManager::UpdateBuyer(uint32 pDiff)
                     }
 
                     float viewPower = frand(0.0f, 1.0f);
-                    sLog.Out(LOG_BASIC, LogLevel::LOG_LVL_BASIC, "buyer view check : %d - %f - %f", eachAuctionId, sMingConfig.BuyerViewRate, viewPower);
+                    //sLog.Out(LOG_BASIC, LogLevel::LOG_LVL_BASIC, "buyer view check : %d - %f - %f", eachAuctionId, sMingConfig.BuyerViewRate, viewPower);
                     if (viewPower < sMingConfig.BuyerViewRate)
                     {
                         if (Item* checkItem = sAuctionMgr.GetAItem(aeIT->second->itemGuidLow))
@@ -297,7 +296,7 @@ bool MingManager::UpdateBuyer(uint32 pDiff)
                                 priceRate = priceRate * priceRate;
                                 buyRate = buyRate * priceRate;
                                 float buyPower = frand(0.0f, 1.0f);
-                                sLog.Out(LOG_BASIC, LogLevel::LOG_LVL_BASIC, "buy check : %s - %f - %f", destIT->Name1, buyRate, buyPower);
+                                //sLog.Out(LOG_BASIC, LogLevel::LOG_LVL_BASIC, "buy check : %s - %f - %f", destIT->Name1, buyRate, buyPower);
                                 if (buyPower < buyRate)
                                 {
                                     toBuyAuctionIdSet.insert(eachAuctionId);

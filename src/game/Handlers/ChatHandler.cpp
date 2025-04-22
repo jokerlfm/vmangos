@@ -683,6 +683,9 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recv_data)
             if (_player && _player->IsInCombat())
                 break;
 
+            // lfm no afk
+            break;
+
             if (msgLen || !_player->IsAFK())
             {
                 if (MasterPlayer* masterPlr = GetMasterPlayer())
@@ -721,7 +724,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recv_data)
     }
 
     // lfm nier 
-    if (Nier_Base* nb = sNierManager->GetNier(_player->GetSession()->GetAccountId()))
+    if (Nier_Base* nb = sNierManager->GetNier(nier_id))
     {
         if (!nb->isRobot)
         {
@@ -734,7 +737,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recv_data)
             {
                 if (MasterPlayer* toPlayer = ObjectAccessor::FindMasterPlayer(to.c_str()))
                 {
-                    targetNierId = toPlayer->GetSession()->GetAccountId();
+                    targetNierId = toPlayer->GetSession()->nier_id;
                 }
             }
             else if (type == ChatMsg::CHAT_MSG_PARTY || type == ChatMsg::CHAT_MSG_RAID_LEADER)

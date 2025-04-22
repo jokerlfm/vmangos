@@ -88,6 +88,9 @@
 // lfm ming
 #include "MingManager.h"
 
+// lfm nier
+#include "NierManager.h"
+
 INSTANTIATE_SINGLETON_1(World);
 
 volatile bool World::m_stopEvent = false;
@@ -1902,6 +1905,12 @@ void World::SetInitialWorldSettings()
     {
         sMingManager->InitializeManager();
     }
+
+    // lfm nier
+    if (sNierConfig.StartNier())
+    {
+        sNierManager->InitializeManager();
+    }
 }
 
 void World::DetectDBCLang()
@@ -2148,6 +2157,9 @@ void World::Update(uint32 diff)
 
     // lfm ming update 
     sMingManager->UpdateMing(diff);
+
+    // lfm nier update
+    sNierManager->UpdateNier(diff);
 }
 
 // Send a packet to all players (except self if mentioned)

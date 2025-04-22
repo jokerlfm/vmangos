@@ -380,20 +380,22 @@ void Unit::Update(uint32 update_diff, uint32 p_time)
                             {
                                 maxLevel = 80;
                             }
-                            for (int checkLevel = minLevel; checkLevel <= maxLevel; checkLevel++)
+                            std::unique_ptr<QueryResult> replaceQR = WorldDatabase.PQuery("SELECT entry FROM item_template where sell_price > 0 and quality > 1 and required_skill = 0 and required_skill_rank = 0 and required_spell = 0 and required_city_rank = 0 and required_honor_rank = 0 and required_reputation_faction = 0 and required_reputation_rank = 0 and class = %d and subclass = %d and inventory_type = %d and required_level >= %d and required_level <= %d order by rand()", proto->Class, proto->SubClass, proto->InventoryType, minLevel, maxLevel);
+                            if (replaceQR)
                             {
-                                for (std::unordered_set<uint32>::iterator entryIT = sMingManager->equipsMap[proto->Class][proto->SubClass][proto->InventoryType][checkLevel].begin(); entryIT != sMingManager->equipsMap[proto->Class][proto->SubClass][proto->InventoryType][checkLevel].end(); entryIT++)
+                                uint32 replaceEntry = 0;
+                                do
                                 {
-                                    replaceMap[replaceMap.size()] = *entryIT;
+                                    Field* fields = replaceQR->Fetch();
+                                    replaceEntry = fields[0].GetUInt32();
+                                    break;
+                                } while (replaceQR->NextRow());
+                                if (replaceEntry > 0)
+                                {
+                                    (*itr)->item = replaceEntry;
+                                    (*itr)->maxcount = 1;
+                                    (*itr)->incrtime = 7200000;
                                 }
-                            }
-                            if (replaceMap.size() > 0)
-                            {
-                                uint32 replaceEntry = urand(0, replaceMap.size() - 1);
-                                replaceEntry = replaceMap[replaceEntry];
-                                (*itr)->item = replaceEntry;
-                                (*itr)->maxcount = 1;
-                                (*itr)->incrtime = 7200000;
                             }
                         }
                     }
@@ -427,20 +429,22 @@ void Unit::Update(uint32 update_diff, uint32 p_time)
                             {
                                 maxLevel = 80;
                             }
-                            for (int checkLevel = minLevel; checkLevel <= maxLevel; checkLevel++)
+                            std::unique_ptr<QueryResult> replaceQR = WorldDatabase.PQuery("SELECT entry FROM item_template where sell_price > 0 and required_skill = 0 and required_skill_rank = 0 and required_spell = 0 and required_city_rank = 0 and required_honor_rank = 0 and required_reputation_faction = 0 and required_reputation_rank = 0 and class = %d and subclass = %d and inventory_type = %d and required_level >= %d and required_level <= %d order by rand()", proto->Class, proto->SubClass, proto->InventoryType, minLevel, maxLevel);
+                            if (replaceQR)
                             {
-                                for (std::unordered_set<uint32>::iterator entryIT = sMingManager->equipsMap[proto->Class][proto->SubClass][proto->InventoryType][checkLevel].begin(); entryIT != sMingManager->equipsMap[proto->Class][proto->SubClass][proto->InventoryType][checkLevel].end(); entryIT++)
+                                uint32 replaceEntry = 0;
+                                do
                                 {
-                                    replaceMap[replaceMap.size()] = *entryIT;
+                                    Field* fields = replaceQR->Fetch();
+                                    replaceEntry = fields[0].GetUInt32();
+                                    break;
+                                } while (replaceQR->NextRow());
+                                if (replaceEntry > 0)
+                                {
+                                    (*itr)->item = replaceEntry;
+                                    (*itr)->maxcount = 1;
+                                    (*itr)->incrtime = 7200000;
                                 }
-                            }
-                            if (replaceMap.size() > 0)
-                            {
-                                uint32 replaceEntry = urand(0, replaceMap.size());
-                                replaceEntry = replaceMap[replaceEntry];
-                                (*itr)->item = replaceEntry;
-                                (*itr)->maxcount = 1;
-                                (*itr)->incrtime = 7200000;
                             }
                         }
                     }

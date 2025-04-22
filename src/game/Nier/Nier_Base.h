@@ -121,7 +121,7 @@ public:
     uint32 actionState;
 
     uint32 nier_id;
-    uint32 master_id;
+    uint32 master_character_id;
     uint32 account_id;
     std::string account_name;
     uint32 character_id;

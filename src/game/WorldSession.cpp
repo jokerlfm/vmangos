@@ -47,6 +47,9 @@
 #include "MasterPlayer.h"
 #include "Crypto/Hash/MD5.h"
 
+// lfm nier
+#include "NierManager.h"
+
 // select opcodes appropriate for processing in Map::Update context for current session state
 static bool MapSessionFilterHelper(WorldSession* session, OpcodeHandler const& opHandle)
 {
@@ -86,6 +89,9 @@ WorldSession::WorldSession(uint32 id, WorldSocket *sock, AccountTypes sec, time_
     }
     else
         m_address = "<BOT>";
+
+    // lfm nier
+    nier_id = 0;
 }
 
 // WorldSession destructor
@@ -470,11 +476,21 @@ bool WorldSession::Update(PacketFilter& updater)
         ///- If necessary, log the player out
         bool const forceConnection = !sWorld.IsStopped() && sPlayerBotMgr.ForceAccountConnection(this);
 
-        if ((!m_socket || (ShouldLogOut(currTime) && !m_playerLoading)) && !forceConnection && m_bot == nullptr)
-            LogoutPlayer(true);
+        // lfm nier
+        bool isNier = false;
+        if (Nier_Base* nb = sNierManager->GetNier(GetAccountId()))
+        {
+            isNier = nb->isRobot;
+        }
 
-        if (!m_socket && !forceConnection && this->m_bot == nullptr)
+        if ((!m_socket || (ShouldLogOut(currTime) && !m_playerLoading)) && !forceConnection && m_bot == nullptr && !isNier)
+        {
+            LogoutPlayer(true);
+        }
+        if (!m_socket && !forceConnection && this->m_bot == nullptr && !isNier)
+        {
             return false;                                       //Will remove this session from the world session map
+        }
     }
     else // Async map based update
     {

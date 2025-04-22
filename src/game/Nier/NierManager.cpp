@@ -22,7 +22,6 @@
 
 NierManager::NierManager()
 {
-    checkDelay = 0;
     allianceRaces.clear();
     hordeRaces.clear();
     nameIndex = 0;
@@ -40,8 +39,6 @@ void NierManager::InitializeManager()
     }
 
     sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_BASIC, "Initialize nier");
-
-    checkDelay = 500;
 
     allianceRaces.clear();
     allianceRaces[CLASS_WARRIOR][allianceRaces[CLASS_WARRIOR].size()] = RACE_HUMAN;
@@ -148,88 +145,6 @@ void NierManager::InitializeManager()
         DeleteNiers();
     }
 
-    std::unique_ptr<QueryResult> nierQR = CharacterDatabase.Query("SELECT nier_id, master_id, account_name, character_id, target_level, target_race, target_class, target_specialty FROM nier");
-    if (nierQR)
-    {
-        do
-        {
-            Field* fields = nierQR->Fetch();
-            uint32 nier_id = fields[0].GetUInt32();
-            uint32 master_id = fields[1].GetUInt32();
-            std::string account_name = fields[2].GetString();
-            uint32 character_id = fields[3].GetUInt32();
-            uint32 target_level = fields[4].GetUInt32();
-            uint32 target_race = fields[5].GetUInt32();
-            uint32 target_class = fields[6].GetUInt32();
-            uint32 target_specialty = fields[7].GetUInt32();
-
-            Nier_Base* nb = nullptr;
-            switch (target_class)
-            {
-            //case CLASS_WARRIOR:
-            //{
-            //    nb = new Nier_Warrior();
-            //    break;
-            //}
-            //case CLASS_PALADIN:
-            //{
-            //    nb = new Nier_Paladin();
-            //    break;
-            //}
-            //case CLASS_HUNTER:
-            //{
-            //    nb = new Nier_Hunter();
-            //    break;
-            //}
-            //case CLASS_ROGUE:
-            //{
-            //    nb = new Nier_Rogue();
-            //    break;
-            //}
-            //case CLASS_PRIEST:
-            //{
-            //    nb = new Nier_Priest();
-            //    break;
-            //}
-            //case CLASS_SHAMAN:
-            //{
-            //    nb = new Nier_Shaman();
-            //    break;
-            //}
-            //case CLASS_MAGE:
-            //{
-            //    nb = new Nier_Mage();
-            //    break;
-            //}
-            //case CLASS_WARLOCK:
-            //{
-            //    nb = new Nier_Warlock();
-            //    break;
-            //}
-            //case CLASS_DRUID:
-            //{
-            //    nb = new Nier_Druid();
-            //    break;
-            //}
-            default:
-            {
-                break;
-            }
-            }
-            if (nb)
-            {
-                nb->nier_id = fields[0].GetUInt32();
-                nb->account_name = fields[1].GetString();
-                nb->character_id = fields[2].GetUInt32();
-                nb->target_level = fields[3].GetUInt32();
-                nb->target_race = fields[4].GetUInt32();
-                nb->target_class = fields[5].GetUInt32();
-                nb->target_specialty = fields[6].GetUInt32();
-                nierMap[nier_id] = nb;
-            }
-        } while (nierQR->NextRow());
-    }
-
     nameIndex = 0;
     std::unique_ptr<QueryResult> nierNameQR = WorldDatabase.Query("SELECT name FROM nier_names order by rand()");
     if (nierNameQR)
@@ -251,36 +166,13 @@ NierManager* NierManager::instance()
     return &instance;
 }
 
-void NierManager::UpdateNierManager(uint32 pmDiff)
+void NierManager::UpdateNier(uint32 pDiff)
 {
     if (sNierConfig.Enable == 0)
     {
         return;
     }
 
-    if (checkDelay >= 0)
-    {
-        checkDelay -= pmDiff;
-    }
-    if (checkDelay < 0)
-    {
-        checkDelay = NIER_MANAGER_CHECK_DELAY;
-        std::unordered_map<uint32, WorldSession*> allSessions = sWorld.GetAllSessions();
-        for (std::unordered_map<uint32, WorldSession*>::iterator wsIT = allSessions.begin(); wsIT != allSessions.end(); wsIT++)
-        {
-            if (WorldSession* eachWS = wsIT->second)
-            {
-                if (nierMap.find(eachWS->GetAccountId()) == nierMap.end())
-                {
-                    nierMap[eachWS->GetAccountId()] = nullptr;
-                }
-            }
-        }
-    }
-}
-
-void NierManager::UpdateNiers(uint32 pDiff)
-{
     for (std::unordered_map<uint32, Nier_Base*>::iterator reIT = nierMap.begin(); reIT != nierMap.end(); reIT++)
     {
         if (reIT->second)
@@ -352,31 +244,15 @@ void NierManager::DeleteNiers()
     }
 }
 
-bool NierManager::CreateNier(uint32 pMasterId, uint32 pClass)
+bool NierManager::CreateNier(uint32 pMasterCharacterId, uint32 pClass)
 {
-    ObjectGuid masterGuid = ObjectGuid(HIGHGUID_PLAYER, pMasterId);
+    ObjectGuid masterGuid = ObjectGuid(HIGHGUID_PLAYER, pMasterCharacterId);
     if (Player* master = ObjectAccessor::FindPlayer(masterGuid))
     {
         if (master->IsInWorld())
         {
             if (master->GetLevel() >= 20)
             {
-                uint32 nier_id = 0;
-                std::unique_ptr<QueryResult> targetNierQR = CharacterDatabase.PQuery("SELECT nier_id FROM nier where master_id = %d and target_class = %d", pMasterId, pClass);
-                if (targetNierQR)
-                {
-                    Field* fields = targetNierQR->Fetch();
-                    nier_id = fields[0].GetUInt32();
-                }
-                if (nier_id > 0)
-                {
-                    std::ostringstream replyStream;
-                    replyStream << "nier already exists : " << pMasterId << " - " << pClass;
-                    std::string replyString = replyStream.str();
-                    sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, replyString.c_str());
-                    sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_BASIC, replyString.c_str());
-                    return false;
-                }
                 uint32 targetRace = 0;
                 if (master->GetTeamId() == TeamId::TEAM_ALLIANCE)
                 {
@@ -409,195 +285,108 @@ bool NierManager::CreateNier(uint32 pMasterId, uint32 pClass)
                     sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_ERROR, "Account already %s exists.", checkAccountName);
                     return false;
                 }
-                if (!sAccountMgr.CreateAccount(checkAccountName, NIER_MARK) == AccountOpResult::AOR_OK)
-                {
-                    sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_ERROR, "Account creation failed.", checkAccountName);
-                    return false;
-                }
-                std::unique_ptr<QueryResult> verifyAccountQR = LoginDatabase.Query(accountQuerySQL.c_str());
-                if (verifyAccountQR)
-                {
-                    Field* fields = verifyAccountQR->Fetch();
-                    nier_id = fields[0].GetUInt32();
-                }
-                if (nier_id > 0)
-                {
-                    std::ostringstream sqlStream;
-                    sqlStream << "INSERT INTO nier (nier_id, master_id, account_name, account_id, character_id, target_level, target_race, target_class, target_specialty) VALUES (" << nier_id << ", " << pMasterId << ", '" << checkAccountName << "', " << nier_id << ", " << 0 << ", " << 0 << ", " << targetRace << ", " << pClass << ", " << 1 << ")";
-                    std::string sql = sqlStream.str();
-                    CharacterDatabase.DirectExecute(sql.c_str());
+                std::ostringstream sqlStream;
+                sqlStream << "INSERT INTO nier (nier_id, master_character_id, account_name, account_id, character_id, target_level, target_race, target_class, target_specialty) VALUES (" << maxId << ", " << pMasterCharacterId << ", '" << checkAccountName << "', 0, 0, 0, " << targetRace << ", " << pClass << ", " << 1 << ")";
+                std::string sql = sqlStream.str();
+                CharacterDatabase.DirectExecute(sql.c_str());
 
-                    Nier_Base* nb = nullptr;
-                    switch (pClass)
-                    {
-                    //case CLASS_WARRIOR:
-                    //{
-                    //    nb = new Nier_Warrior();
-                    //    break;
-                    //}
-                    //case CLASS_PALADIN:
-                    //{
-                    //    nb = new Nier_Paladin();
-                    //    break;
-                    //}
-                    //case CLASS_HUNTER:
-                    //{
-                    //    nb = new Nier_Hunter();
-                    //    break;
-                    //}
-                    //case CLASS_ROGUE:
-                    //{
-                    //    nb = new Nier_Rogue();
-                    //    break;
-                    //}
-                    //case CLASS_PRIEST:
-                    //{
-                    //    nb = new Nier_Priest();
-                    //    break;
-                    //}
-                    //case CLASS_SHAMAN:
-                    //{
-                    //    nb = new Nier_Shaman();
-                    //    break;
-                    //}
-                    //case CLASS_MAGE:
-                    //{
-                    //    nb = new Nier_Mage();
-                    //    break;
-                    //}
-                    //case CLASS_WARLOCK:
-                    //{
-                    //    nb = new Nier_Warlock();
-                    //    break;
-                    //}
-                    //case CLASS_DRUID:
-                    //{
-                    //    nb = new Nier_Druid();
-                    //    break;
-                    //}
-                    default:
-                    {
-                        break;
-                    }
-                    }
-                    if (nb)
-                    {
-                        nb->nier_id = nier_id;
-                        nb->master_id = pMasterId;
-                        nb->account_name = checkAccountName;
-                        nb->account_id = nier_id;
-                        nb->character_id = 0;
-                        nb->target_level = 0;
-                        nb->target_race = targetRace;
-                        nb->target_class = pClass;
-                        nb->target_specialty = 1;
-                        nb->isRobot = true;
-                        nierMap[nier_id] = nb;
-                    }
-
-                    std::ostringstream replyStream;
-                    replyStream << "nier " << checkAccountName << " created";
-                    sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, replyStream.str().c_str());
-                    sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_BASIC, replyStream.str().c_str());
-                }
-                else
-                {
-                    sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_ERROR, "Account creation failed.", checkAccountName);
-                    return false;
-                }
+                std::ostringstream replyStream;
+                replyStream << "nier " << checkAccountName << " - " << targetRace << " - " << pClass << " created";
+                sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, replyStream.str().c_str());
+                sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_BASIC, replyStream.str().c_str());
             }
         }
     }
     return true;
 }
 
-bool NierManager::LoginNiers(uint32 pMasterId)
+bool NierManager::LoginNiers(uint32 pMasterCharacterId)
 {
-    std::unique_ptr<QueryResult> nierQR = CharacterDatabase.PQuery("SELECT nier_id, master_id, account_name, account_id, character_id, target_level, target_race, target_class, target_specialty FROM nier where master_id = %d", pMasterId);
+    std::unique_ptr<QueryResult> nierQR = CharacterDatabase.PQuery("SELECT nier_id, master_character_id, account_name, account_id, character_id, target_level, target_race, target_class, target_specialty FROM nier where master_character_id = %d", pMasterCharacterId);
     if (nierQR)
     {
         Field* fields = nierQR->Fetch();
         uint32 nier_id = fields[0].GetUInt32();
-        uint32 master_id = fields[1].GetUInt32();
+        uint32 master_character_id = fields[1].GetUInt32();
         std::string account_name = fields[2].GetString();
-        uint32 character_id = fields[3].GetUInt32();
-        uint32 target_level = fields[4].GetUInt32();
-        uint32 target_race = fields[5].GetUInt32();
-        uint32 target_class = fields[6].GetUInt32();
-        uint32 target_specialty = fields[7].GetUInt32();
+        uint32 account_id = fields[3].GetUInt32();
+        uint32 character_id = fields[4].GetUInt32();
+        uint32 target_level = fields[5].GetUInt32();
+        uint32 target_race = fields[6].GetUInt32();
+        uint32 target_class = fields[7].GetUInt32();
+        uint32 target_specialty = fields[8].GetUInt32();
         Nier_Base* nb = nullptr;
-        if (nierMap.find(nier_id) == nierMap.end())
+        if (nierMap.find(nier_id) != nierMap.end())
         {
-            switch (target_class)
-            {
-            //case CLASS_WARRIOR:
-            //{
-            //    nb = new Nier_Warrior();
-            //    break;
-            //}
-            //case CLASS_PALADIN:
-            //{
-            //    nb = new Nier_Paladin();
-            //    break;
-            //}
-            //case CLASS_HUNTER:
-            //{
-            //    nb = new Nier_Hunter();
-            //    break;
-            //}
-            //case CLASS_ROGUE:
-            //{
-            //    nb = new Nier_Rogue();
-            //    break;
-            //}
-            //case CLASS_PRIEST:
-            //{
-            //    nb = new Nier_Priest();
-            //    break;
-            //}
-            //case CLASS_SHAMAN:
-            //{
-            //    nb = new Nier_Shaman();
-            //    break;
-            //}
-            //case CLASS_MAGE:
-            //{
-            //    nb = new Nier_Mage();
-            //    break;
-            //}
-            //case CLASS_WARLOCK:
-            //{
-            //    nb = new Nier_Warlock();
-            //    break;
-            //}
-            //case CLASS_DRUID:
-            //{
-            //    nb = new Nier_Druid();
-            //    break;
-            //}
-            default:
-            {
-                break;
-            }
-            }
-            if (nb)
-            {
-                nb->nier_id = nier_id;
-                nb->master_id = master_id;
-                nb->account_name = account_name;
-                nb->account_id = nier_id;
-                nb->character_id = 0;
-                nb->target_level = 0;
-                nb->target_race = target_race;
-                nb->target_class = target_class;
-                nb->target_specialty = 1;
-                nb->isRobot = true;
-                nierMap[nier_id] = nb;
-            }
+            nb = nierMap[nier_id];
         }
         else
         {
-            nb = nierMap[nier_id];
+            switch (target_class)
+            {
+            case CLASS_WARRIOR:
+            {
+                nb = new Nier_Warrior();
+                break;
+            }
+            case CLASS_PALADIN:
+            {
+                nb = new Nier_Paladin();
+                break;
+            }
+            case CLASS_HUNTER:
+            {
+                nb = new Nier_Hunter();
+                break;
+            }
+            case CLASS_ROGUE:
+            {
+                nb = new Nier_Rogue();
+                break;
+            }
+            case CLASS_PRIEST:
+            {
+                nb = new Nier_Priest();
+                break;
+            }
+            case CLASS_SHAMAN:
+            {
+                nb = new Nier_Shaman();
+                break;
+            }
+            case CLASS_MAGE:
+            {
+                nb = new Nier_Mage();
+                break;
+            }
+            case CLASS_WARLOCK:
+            {
+                nb = new Nier_Warlock();
+                break;
+            }
+            case CLASS_DRUID:
+            {
+                nb = new Nier_Druid();
+                break;
+            }
+            default:
+            {
+                nb = new Nier_Base();
+                break;
+            }
+            }
+            nb->nier_id = nier_id;
+            nb->master_character_id = master_character_id;
+            nb->account_name = account_name;
+            nb->account_id = nier_id;
+            nb->character_id = 0;
+            nb->target_level = 0;
+            nb->target_race = target_race;
+            nb->target_class = target_class;
+            nb->target_specialty = 1;
+            nb->isRobot = true;
+            nb->accountState = NierAccountState::NierAccountState_OffLine;
+            nierMap[nier_id] = nb;
         }
         if (nb)
         {
@@ -607,14 +396,14 @@ bool NierManager::LoginNiers(uint32 pMasterId)
                 nb->checkDelay = urand(1 * IN_MILLISECONDS, 3 * IN_MILLISECONDS);
             }
             std::ostringstream replyStream;
-            replyStream << "nier " << nier_id << " to login";
+            replyStream << "nier " << nier_id << " - " << account_name << " to login";
             sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, replyStream.str().c_str());
             sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_BASIC, replyStream.str().c_str());
         }
         else
         {
             std::ostringstream replyStream;
-            replyStream << "nier " << nier_id << " has wrong data";
+            replyStream << "nier " << nier_id << " - " << account_name << " has wrong data";
             sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, replyStream.str().c_str());
             sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_ERROR, replyStream.str().c_str());
         }
@@ -625,13 +414,23 @@ bool NierManager::LoginNiers(uint32 pMasterId)
 
 Nier_Base* NierManager::GetNier(uint32 pNierId)
 {
-    if (nierMap.find(pNierId) == nierMap.end())
+    // lfm debug
+    if (pNierId != 2)
     {
-        nierMap[pNierId] = new Nier_Base();
-        nierMap[pNierId]->isRobot = false;
+        bool breakPoint = true;
+    }
+    if (pNierId > 0)
+    {
+        if (nierMap.find(pNierId) == nierMap.end())
+        {
+            nierMap[pNierId] = new Nier_Base();
+            nierMap[pNierId]->nier_id = pNierId;
+        }
+
+        return nierMap[pNierId];
     }
 
-    return nierMap[pNierId];
+    return nullptr;
 }
 
 bool NierManager::IsPolymorphed(Unit* pmTarget)
@@ -855,6 +654,24 @@ void NierManager::HandleNierChatCommand(Player* pCommander, std::vector<std::str
                         else
                         {
                             LoginNiers(pCommander->GetGUIDLow());
+                        }
+                    }
+                    else if (nierAction == "create")
+                    {
+                        uint32 playerLevel = pCommander->GetLevel();
+                        if (playerLevel < 10)
+                        {
+                            std::ostringstream replyStream;
+                            replyStream << "You level is too low";
+                            sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, replyStream.str().c_str(), pCommander);
+                        }
+                        else
+                        {
+                            if (pCommandVector.size() > 2)
+                            {
+                                uint32 targetClass = atoi(pCommandVector.at(2).c_str());
+                                CreateNier(pCommander->GetGUIDLow(), targetClass);
+                            }
                         }
                     }
                 }

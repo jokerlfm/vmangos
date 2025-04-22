@@ -18,7 +18,7 @@ Nier_Base::Nier_Base()
     checkDelay = 5 * IN_MILLISECONDS;
 
     nier_id = 0;
-    master_id = 0;
+    master_character_id = 0;
     account_id = 0;
     account_name = "";
     character_id = 0;
@@ -106,53 +106,37 @@ bool Nier_Base::UpdateNierAccount(uint32 pElapsed)
     }
     case NierAccountState_CheckAccount:
     {
-        if (nier_id == 0)
+        if (account_name.empty())
         {
             accountState = NierAccountState::NierAccountState_None;
             checkDelay = urand(5 * MINUTE * IN_MILLISECONDS, 10 * MINUTE * IN_MILLISECONDS);
             sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_ERROR, "invalid nier.");
             break;
         }
-        if (account_id > 0)
+        uint32 queryAccountId = 0;
+        std::ostringstream accountQueryStream;
+        accountQueryStream << "SELECT id FROM account where username = '" << account_name << "'";
+        std::unique_ptr<QueryResult> nierAccountQR = LoginDatabase.Query(accountQueryStream.str().c_str());
+        if (nierAccountQR)
         {
+            Field* fields = nierAccountQR->Fetch();
+            queryAccountId = fields[0].GetUInt32();
+        }
+        if (queryAccountId > 0)
+        {
+            account_id = queryAccountId;
             sAccountMgr.SetSecurity(account_id, AccountTypes::SEC_MODERATOR);
-            sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_BASIC, "Nier account %d is ready.", account_id);
+            std::ostringstream sqlStream;
+            sqlStream << "update nier set account_id = " << account_id << " where account_name = '" << account_name << "'";
+            std::string sql = sqlStream.str();
+            CharacterDatabase.DirectExecute(sql.c_str());
+            sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_BASIC, "Nier account %s is ready.", account_name.c_str());
             accountState = NierAccountState::NierAccountState_CheckCharacter;
         }
         else
         {
-            if (account_name.empty())
-            {
-                std::ostringstream anStream;
-                anStream << NIER_MARK << nier_id;
-                account_name = anStream.str();
-            }
-
-            uint32 queryAccountId = 0;
-            std::ostringstream accountQueryStream;
-            accountQueryStream << "SELECT id FROM account where username = '" << account_name << "'";
-            std::unique_ptr<QueryResult> nierAccountQR = LoginDatabase.Query(accountQueryStream.str().c_str());
-            if (nierAccountQR)
-            {
-                Field* fields = nierAccountQR->Fetch();
-                queryAccountId = fields[0].GetUInt32();
-            }
-            if (queryAccountId > 0)
-            {
-                account_id = queryAccountId;
-                sAccountMgr.SetSecurity(account_id, AccountTypes::SEC_MODERATOR);
-                std::ostringstream sqlStream;
-                sqlStream << "update nier set account_id = " << account_id << " where nier_id = " << nier_id;
-                std::string sql = sqlStream.str();
-                CharacterDatabase.DirectExecute(sql.c_str());
-                sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_BASIC, "Nier account %s is created.", account_name.c_str());
-                accountState = NierAccountState::NierAccountState_CheckCharacter;
-            }
-            else
-            {
-                sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_BASIC, "Nier account %s is not ready.", account_name.c_str());
-                accountState = NierAccountState::NierAccountState_CreateAccount;
-            }
+            sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_BASIC, "Nier account %s is not ready.", account_name.c_str());
+            accountState = NierAccountState::NierAccountState_CreateAccount;
         }
         break;
     }
@@ -160,11 +144,11 @@ bool Nier_Base::UpdateNierAccount(uint32 pElapsed)
     {
         if (account_name.empty())
         {
-            std::ostringstream anStream;
-            anStream << NIER_MARK << nier_id;
-            account_name = anStream.str();
+            accountState = NierAccountState::NierAccountState_None;
+            checkDelay = urand(5 * MINUTE * IN_MILLISECONDS, 10 * MINUTE * IN_MILLISECONDS);
+            sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_ERROR, "invalid nier.");
+            break;
         }
-
         if (sAccountMgr.CreateAccount(account_name, NIER_MARK) == AccountOpResult::AOR_OK)
         {
             accountState = NierAccountState::NierAccountState_CheckAccount;
@@ -242,47 +226,39 @@ bool Nier_Base::UpdateNierAccount(uint32 pElapsed)
             return false;
         }
         uint8 gender = 0, skin = 0, face = 0, hairStyle = 0, hairColor = 0, facialHair = 0;
-        while (true)
+        gender = urand(0, 100);
+        if (gender < 50)
         {
-            gender = urand(0, 100);
-            if (gender < 50)
-            {
-                gender = 0;
-            }
-            else
-            {
-                gender = 1;
-            }
-            face = urand(0, 5);
-            hairStyle = urand(0, 5);
-            hairColor = urand(0, 5);
-            facialHair = urand(0, 5);
+            gender = 0;
+        }
+        else
+        {
+            gender = 1;
+        }
+        face = urand(0, 5);
+        hairStyle = urand(0, 5);
+        hairColor = urand(0, 5);
+        facialHair = urand(0, 5);
 
-            WorldSession* createSession = new WorldSession(account_id, NULL, AccountTypes::SEC_PLAYER, 0, LocaleConstant::LOCALE_enUS);
-            Player* newPlayer = new Player(createSession);
-            if (!Player::SaveNewPlayer(createSession, sObjectMgr.GeneratePlayerLowGuid(), currentName, target_race, target_class, gender, skin, face, hairStyle, hairColor, facialHair))
-            {
-                newPlayer->CleanupsBeforeDelete();
-                delete createSession;
-                delete newPlayer;
-                sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_ERROR, "Character create failed, %s %d %d ", currentName.c_str(), target_race, target_class);
-                sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_BASIC, "Try again");
-                continue;
-            }
-            newPlayer->SetAtLoginFlag(AT_LOGIN_NONE);
-            newPlayer->SaveToDB(true, true);
-            character_id = newPlayer->GetGUIDLow();
-            sWorld.AddSession(createSession);
+        WorldSession* createSession = new WorldSession(account_id, NULL, AccountTypes::SEC_PLAYER, 0, LocaleConstant::LOCALE_enUS);
+        uint32 newCharacterId = sObjectMgr.GeneratePlayerLowGuid();
+        if (Player::SaveNewPlayer(createSession, newCharacterId, currentName, target_race, target_class, gender, skin, face, hairStyle, hairColor, facialHair))
+        {
+            character_id = newCharacterId;
             std::ostringstream replyStream;
-            replyStream << "nier character created : " << account_id << " - " << newPlayer->GetGUIDLow() << " - " << currentName;
+            replyStream << "nier character created : " << account_id << " - " << character_id << " - " << currentName;
             std::string replyString = replyStream.str();
             sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, replyString.c_str());
             sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_BASIC, replyString.c_str());
-            delete createSession;
-            break;
+            accountState = NierAccountState::NierAccountState_CheckCharacter;
+            checkDelay = urand(2 * IN_MILLISECONDS, 5 * IN_MILLISECONDS);
         }
-        accountState = NierAccountState::NierAccountState_CheckCharacter;
-        checkDelay = urand(2 * IN_MILLISECONDS, 5 * IN_MILLISECONDS);
+        else
+        {
+            sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_ERROR, "Character create failed, %s %d %d ", currentName.c_str(), target_race, target_class);
+            checkDelay = urand(5 * IN_MILLISECONDS, 10 * IN_MILLISECONDS);
+        }
+        delete createSession;
         break;
     }
     case NierAccountState_CheckLogin:
@@ -319,7 +295,6 @@ bool Nier_Base::UpdateNierAccount(uint32 pElapsed)
         std::string replyString = replyStream.str();
         sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, replyString.c_str());
         sLog.Out(LogType::LOG_BASIC, LogLevel::LOG_LVL_BASIC, replyString.c_str());
-        checkDelay = urand(5 * IN_MILLISECONDS, 10 * IN_MILLISECONDS);
         accountState = NierAccountState::NierAccountState_CheckLogin;
         checkDelay = urand(2 * IN_MILLISECONDS, 5 * IN_MILLISECONDS);
         break;
@@ -339,7 +314,7 @@ bool Nier_Base::UpdateNierAccount(uint32 pElapsed)
         {
             if (me->IsInWorld())
             {
-                ObjectGuid masterGuid = ObjectGuid(HIGHGUID_PLAYER, master_id);
+                ObjectGuid masterGuid = ObjectGuid(HIGHGUID_PLAYER, master_character_id);
                 if (Player* master = ObjectAccessor::FindPlayer(masterGuid))
                 {
                     if (master->IsInWorld())
@@ -763,6 +738,8 @@ bool Nier_Base::Follow(Unit* pTarget)
         return false;
     }
     ChooseTarget(pTarget);
+
+    return true;
 }
 
 bool Nier_Base::Cure(Unit* pTarget)

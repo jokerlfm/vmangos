@@ -33,8 +33,7 @@ class NierManager
 
 public:
     void InitializeManager();
-    void UpdateNierManager(uint32 pDiff);
-    void UpdateNiers(uint32 pDiff);
+    void UpdateNier(uint32 pDiff);
     void LogoutNiers(bool pmInstant = false);
     void DeleteNiers();
     bool CreateNier(uint32 pMasterId, uint32 pClass);
@@ -73,7 +72,7 @@ public:
     std::unordered_map<uint32, std::unordered_map<uint32, std::unordered_map<uint32, std::unordered_map<uint32, uint32>>>> equipsMap;
 
 private:
-    int checkDelay;
+
 };
 
 class AllCreaturesOfEntryInRange_Nier
