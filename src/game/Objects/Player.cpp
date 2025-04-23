@@ -322,6 +322,9 @@ Player::Player(WorldSession* session) : Unit(),
 
     // lfm auto fish
     fishingDelay = 0;
+
+    // lfm nier 
+    nierGroupRole = 0;
 }
 
 Player::~Player()

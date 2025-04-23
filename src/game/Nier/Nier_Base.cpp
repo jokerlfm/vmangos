@@ -28,12 +28,9 @@ Nier_Base::Nier_Base()
 
     me = nullptr;
     actionTarget = new NierActionTarget();
-    isRobot = false;
     specialty = 0;
     accountState = NierAccountState::NierAccountState_None;
     actionState = NierActionState::NierActionState_None;
-
-    groupRole = NierGroupRole::NierGroupRole_DPS;
 
     assembleDelay = 0;
 }
@@ -265,10 +262,11 @@ bool Nier_Base::UpdateNierAccount(uint32 pElapsed)
     {
         checkDelay = urand(2 * IN_MILLISECONDS, 5 * IN_MILLISECONDS);
         ObjectGuid playerGuid = ObjectGuid(HIGHGUID_PLAYER, character_id);
-        if (Player* me = ObjectAccessor::FindPlayer(playerGuid))
+        if (Player* targetPlayer = ObjectAccessor::FindPlayer(playerGuid))
         {
-            if (me->IsInWorld())
+            if (targetPlayer->IsInWorld())
             {
+                me = targetPlayer;
                 std::ostringstream replyStream;
                 replyStream << "nier character logged in : " << account_id << " - " << character_id;
                 std::string replyString = replyStream.str();
@@ -288,6 +286,7 @@ bool Nier_Base::UpdateNierAccount(uint32 pElapsed)
             loginSession = new WorldSession(account_id, NULL, AccountTypes::SEC_PLAYER, 0, LocaleConstant::LOCALE_enUS);
             sWorld.AddSession(loginSession);
         }
+        loginSession->nier_id = nier_id;
         ObjectGuid playerGuid = ObjectGuid(HIGHGUID_PLAYER, character_id);
         loginSession->HandlePlayerLogin_Simple(playerGuid);
         std::ostringstream replyStream;
@@ -483,6 +482,10 @@ bool Nier_Base::UpdateNierAction(uint32 pElapsed)
                     {
                         break;
                     }
+                    break;
+                }
+                case NierActionState::NierActionState_Freeze:
+                {
                     break;
                 }
                 default:
@@ -690,11 +693,11 @@ bool Nier_Base::Attack(Unit* pTarget)
 
 bool Nier_Base::Tank(Unit* pTarget)
 {
-    if (groupRole != NierGroupRole::NierGroupRole_Tank)
+    if (!me)
     {
         return false;
     }
-    if (!me)
+    if (me->nierGroupRole != NierGroupRole::NierGroupRole_Tank)
     {
         return false;
     }

@@ -67,15 +67,15 @@ class Nier_Base
 public:
     Nier_Base();
     virtual bool Attack(Unit* pTarget);
-    bool Tank(Unit* pTarget);
-    bool Heal(Unit* pTarget);
-    bool Follow(Unit* pTarget);
-    bool Cure(Unit* pTarget);
-    bool Buff(Unit* pTarget);
-    bool Revive(Unit* pTarget);
-    bool InitializeCharacter(uint32 pTargetLevel);
-    bool ResetTalentsAndSpells();
-    bool InitializeEquipments(bool pmReset = false);
+    virtual bool Tank(Unit* pTarget);
+    virtual bool Heal(Unit* pTarget);
+    virtual bool Follow(Unit* pTarget);
+    virtual bool Cure(Unit* pTarget);
+    virtual bool Buff(Unit* pTarget);
+    virtual bool Revive(Unit* pTarget);
+    virtual bool InitializeCharacter(uint32 pTargetLevel);
+    virtual bool ResetTalentsAndSpells();
+    virtual bool InitializeEquipments(bool pmReset = false);
 
     void Prepare();
     void Update(uint32 pDiff);
@@ -114,7 +114,6 @@ public:
 
     Player* me;
     NierActionTarget* actionTarget;
-    bool isRobot;
 
     uint32 specialty;
     uint32 accountState;
@@ -129,8 +128,6 @@ public:
     uint32 target_race;
     uint32 target_class;
     uint32 target_specialty;
-
-    uint32 groupRole;
 
     int assembleDelay;
 };

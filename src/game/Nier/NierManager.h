@@ -36,7 +36,7 @@ public:
     void UpdateNier(uint32 pDiff);
     void LogoutNiers(bool pmInstant = false);
     void DeleteNiers();
-    bool CreateNier(uint32 pMasterId, uint32 pClass);
+    bool CreateNier(uint32 pMasterId, uint32 pClass, uint32 pRace);
     bool LoginNiers(uint32 pMasterId);
 
     Nier_Base* GetNier(uint32 pNierId);

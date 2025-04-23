@@ -136,6 +136,14 @@ void WorldSession::SendPacket(WorldPacket const* packet)
         return;
     }
 
+    // lfm nier    
+    if (nier_id)
+    {
+        WorldPacket eachCopy(*packet);
+        sNierManager->HandlePacket(this, eachCopy);
+        return;
+    }
+
     if (!m_socket)
     {
         if (GetBot() && GetBot()->ai)
@@ -477,17 +485,11 @@ bool WorldSession::Update(PacketFilter& updater)
         bool const forceConnection = !sWorld.IsStopped() && sPlayerBotMgr.ForceAccountConnection(this);
 
         // lfm nier
-        bool isNier = false;
-        if (Nier_Base* nb = sNierManager->GetNier(GetAccountId()))
-        {
-            isNier = nb->isRobot;
-        }
-
-        if ((!m_socket || (ShouldLogOut(currTime) && !m_playerLoading)) && !forceConnection && m_bot == nullptr && !isNier)
+        if ((!m_socket || (ShouldLogOut(currTime) && !m_playerLoading)) && !forceConnection && m_bot == nullptr && nier_id == 0)
         {
             LogoutPlayer(true);
         }
-        if (!m_socket && !forceConnection && this->m_bot == nullptr && !isNier)
+        if (!m_socket && !forceConnection && this->m_bot == nullptr && nier_id == 0)
         {
             return false;                                       //Will remove this session from the world session map
         }
@@ -515,6 +517,7 @@ void WorldSession::ProcessPackets(PacketFilter& updater)
 {
     std::unique_ptr<WorldPacket> packet;
     m_receivedPacketType[updater.PacketProcessType()] = false;
+
     while (CanProcessPackets() && m_recvQueue[updater.PacketProcessType()].next(packet, updater))
     {
         m_receivedPacketType[updater.PacketProcessType()] = true;

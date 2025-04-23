@@ -723,29 +723,23 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recv_data)
         break;
     }
 
-    // lfm nier 
-    if (Nier_Base* nb = sNierManager->GetNier(nier_id))
+    if (nier_id == 0)
     {
-        if (!nb->isRobot)
+        std::vector<std::string> commandVector = sMingManager->SplitString(msg, " ", true);
+        if (type == ChatMsg::CHAT_MSG_SAY)
         {
-            uint32 targetNierId = 0;
-            if (type == ChatMsg::CHAT_MSG_SAY)
+            sNierManager->HandleNierChatCommand(_player, commandVector, 0);
+        }
+        else if (type == ChatMsg::CHAT_MSG_WHISPER)
+        {
+            if (MasterPlayer* toPlayer = ObjectAccessor::FindMasterPlayer(to.c_str()))
             {
-                targetNierId = nb->nier_id;
+                sNierManager->HandleNierChatCommand(_player, commandVector, toPlayer->GetSession()->nier_id);
             }
-            else if (type == ChatMsg::CHAT_MSG_WHISPER)
-            {
-                if (MasterPlayer* toPlayer = ObjectAccessor::FindMasterPlayer(to.c_str()))
-                {
-                    targetNierId = toPlayer->GetSession()->nier_id;
-                }
-            }
-            else if (type == ChatMsg::CHAT_MSG_PARTY || type == ChatMsg::CHAT_MSG_RAID_LEADER)
-            {
-                targetNierId = -1;
-            }
-            std::vector<std::string> commandVector = sMingManager->SplitString(msg, " ", true);
-            sNierManager->HandleNierChatCommand(_player, commandVector, targetNierId);
+        }
+        else if (type == ChatMsg::CHAT_MSG_PARTY || type == ChatMsg::CHAT_MSG_RAID_LEADER)
+        {
+            sNierManager->HandleNierChatCommand(_player, commandVector, -1);
         }
     }
 }

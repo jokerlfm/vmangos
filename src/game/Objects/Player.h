@@ -736,6 +736,9 @@ class Player final: public Unit
         // lfm auto fish
         int fishingDelay;
 
+        // lfm nier
+        uint32 nierGroupRole;
+
         void CleanupsBeforeDelete() override;
 
         // Initializes a new Player object that was not loaded from the database.
