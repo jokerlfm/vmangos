@@ -1009,8 +1009,12 @@ void Creature::RegenerateAll(uint32 update_diff, bool skipCombatCheck)
     if (m_regenTimer > 0)
         return;
 
-    if (!IsInCombat() || IsPolymorphed() || skipCombatCheck)
-        RegenerateHealth();
+    // lfm creature hp always regen 
+    //if (!IsInCombat() || IsPolymorphed() || skipCombatCheck)
+    //{
+    //    RegenerateHealth();
+    //}
+    RegenerateHealth();
 
     RegenerateMana();
 
@@ -1034,13 +1038,32 @@ void Creature::RegenerateMana()
     if (IsInCombat() || GetCharmerOrOwnerGuid().IsPlayer())
     {
         if (!IsUnderLastManaUseEffect())
+        {
             addvalue = round_float_chance(m_manaRegen);
-
-        // lfm creature mana regen too much
-        addvalue = addvalue / 4;
+        }
     }
     else
+    {
         addvalue = maxValue / 3;
+    }
+
+    // lfm creature mana regen
+    if (GetCharmerOrOwnerGuid().IsPlayer())
+    {
+        addvalue = GetStat(STAT_SPIRIT);
+    }
+    else
+    {
+        addvalue = maxValue / 10;
+        if (addvalue > 50)
+        {
+            addvalue = 50;
+        }
+    }
+    if (IsInCombat())
+    {
+        addvalue = addvalue / 3;
+    }
 
     ModifyPower(POWER_MANA, addvalue);
 }
@@ -1080,6 +1103,24 @@ void Creature::RegenerateHealth()
 
     if (addvalue < 0)
         addvalue = 0;
+
+    // lfm creature hp regen
+    if (GetCharmerOrOwnerGuid().IsPlayer())
+    {
+        addvalue = GetStat(STAT_SPIRIT);
+    }
+    else
+    {
+        addvalue = maxValue / 10;
+        if (addvalue > 20)
+        {
+            addvalue = 20;
+        }
+    }
+    if (IsInCombat())
+    {
+        addvalue = addvalue / 3;
+    }
 
     ModifyHealth(addvalue);
 }

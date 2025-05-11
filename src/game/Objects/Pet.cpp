@@ -722,8 +722,12 @@ void Pet::RegenerateAll(uint32 update_diff, bool skipCombatCheck)
 {
     if (m_regenTimer <= static_cast<int64>(update_diff))
     {
-        if (!IsInCombat() || IsPolymorphed())
-            RegenerateHealth();
+        // lfm pet hp always regen 
+        //if (!IsInCombat() || IsPolymorphed())
+        //{
+        //    RegenerateHealth();
+        //}
+        RegenerateHealth();
 
         RegenerateMana();
 
