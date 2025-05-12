@@ -109,7 +109,7 @@ void MingManager::Clean()
     sLog.Out(LOG_BASIC, LOG_LVL_BASIC, "Ming cleaned");
 }
 
-bool MingManager::UpdateMing(uint32 pDiff)
+bool MingManager::Update(uint32 pDiff)
 {
     if (!sMingConfig.Enable)
     {

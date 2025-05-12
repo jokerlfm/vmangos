@@ -7,18 +7,17 @@ class Nier_Base;
 
 class Nier_Rogue :public Nier_Base
 {
-public:    
+public:
     Nier_Rogue();
     bool Attack(Unit* pTarget);
     bool Tank(Unit* pTarget);
     bool Heal(Unit* pTarget);
-    bool Follow(Unit* pTarget);
     bool Cure(Unit* pTarget);
     bool Buff(Unit* pTarget);
     bool Revive(Unit* pTarget);
     bool InitializeCharacter(uint32 pTargetLevel);
     bool ResetTalentsAndSpells();
-    bool InitializeEquipments(bool pmReset = false);
+    void EquipRandomItem(uint32 pEquipSlot);
 
 public:
     uint32 spell_Dismantle;

@@ -137,7 +137,7 @@ void WorldSession::SendPacket(WorldPacket const* packet)
     }
 
     // lfm nier    
-    if (nier_id)
+    if (nier_id > 0)
     {
         WorldPacket eachCopy(*packet);
         sNierManager->HandlePacket(this, eachCopy);
@@ -421,6 +421,36 @@ bool WorldSession::ForcePlayerLogoutDelay()
 // Update the WorldSession (triggered by World update)
 bool WorldSession::Update(PacketFilter& updater)
 {
+    // lfm nier    
+    if (nier_id > 0)
+    {
+        if (_player)
+        {
+            if (_player->IsBeingTeleportedNear())
+            {
+                WorldPacket data(MSG_MOVE_TELEPORT_ACK);
+                data << _player->GetObjectGuid();
+                data << _player->GetLastCounterForMovementChangeType(TELEPORT);
+                data << uint32(time(nullptr));
+                HandleMoveTeleportAckOpcode(data);
+                _player->SetPvP(true);
+                _player->UpdatePvP(true);
+                _player->pvpInfo.inPvPCombat = true;
+                _player->DurabilityRepairAll(false, 0);
+            }
+            if (_player->IsBeingTeleportedFar())
+            {
+                HandleMoveWorldportAckOpcode();
+                _player->SetPvP(true);
+                _player->UpdatePvP(true);
+                _player->pvpInfo.inPvPCombat = true;
+                _player->DurabilityRepairAll(false, 0);
+            }
+        }
+
+        return true;
+    }
+
     uint32 sessionUpdateTime = WorldTimer::getMSTime();
     for (uint32 & i : m_floodPacketsCount)
         i = 0;

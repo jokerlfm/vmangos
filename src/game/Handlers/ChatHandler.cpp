@@ -46,7 +46,6 @@
 
  // lfm nier 
 #include "NierManager.h"
-#include "Nier_Base.h"
 
 bool WorldSession::CheckChatMessageValidity(char* msg, uint32 lang, uint32 msgType)
 {
@@ -418,6 +417,12 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recv_data)
                     a->addMessage(msg, type, GetPlayerPointer(), nullptr);
             }
 
+            // lfm nier 
+            if (GetPlayer()->GetSession()->nier_id == 0)
+            {
+                sNierManager->HandleChatCommand(GetPlayer(), msg, GetPlayer());
+            }
+
             break;
         case CHAT_MSG_EMOTE:
             if (GetPlayer()->GetLevel() < sWorld.getConfig(CONFIG_UINT32_SAY_EMOTE_MIN_LEVEL)
@@ -535,6 +540,12 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recv_data)
                         if (AntispamInterface *a = sAnticheatMgr->GetAntispam())
                             a->addMessage(msg, type, GetPlayerPointer(), PlayerPointer(new PlayerWrapper<MasterPlayer>(player)));
                 }
+
+                // lfm nier 
+                if (GetPlayer()->GetSession()->nier_id == 0)
+                {
+                    sNierManager->HandleChatCommand(GetPlayer(), msg, toPlayer);
+                }
             }
         }
         break;
@@ -559,6 +570,23 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recv_data)
             group->BroadcastPacket(&data, false, group->GetMemberGroup(GetPlayer()->GetObjectGuid()));
             if (lang != LANG_ADDON)
                 sWorld.LogChat(this, "Group", msg, nullptr, group->GetId());
+
+            // lfm nier 
+            if (GetPlayer()->GetSession()->nier_id == 0)
+            {
+                for (GroupReference* groupRef = group->GetFirstMember(); groupRef != nullptr; groupRef = groupRef->next())
+                {
+                    Player* member = groupRef->getSource();
+                    if (member)
+                    {
+                        if (member->GetGUID() != GetPlayer()->GetGUID())
+                        {
+                            sNierManager->HandleChatCommand(GetPlayer(), msg, member);
+                        }
+                    }
+                }
+            }
+
         }
         break;
         case CHAT_MSG_GUILD: // Master side
@@ -625,6 +653,22 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recv_data)
             group->BroadcastPacket(&data, false);
             if (lang != LANG_ADDON)
                 sWorld.LogChat(this, "Raid", msg, nullptr, group->GetId());
+
+            // lfm nier 
+            if (GetPlayer()->GetSession()->nier_id == 0)
+            {
+                for (GroupReference* groupRef = group->GetFirstMember(); groupRef != nullptr; groupRef = groupRef->next())
+                {
+                    Player* member = groupRef->getSource();
+                    if (member)
+                    {
+                        if (member->GetGUID() != GetPlayer()->GetGUID())
+                        {
+                            sNierManager->HandleChatCommand(GetPlayer(), msg, member);
+                        }
+                    }
+                }
+            }
         }
         break;
 
@@ -721,26 +765,6 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recv_data)
         }
 
         break;
-    }
-
-    if (nier_id == 0)
-    {
-        std::vector<std::string> commandVector = sMingManager->SplitString(msg, " ", true);
-        if (type == ChatMsg::CHAT_MSG_SAY)
-        {
-            sNierManager->HandleNierChatCommand(_player, commandVector, 0);
-        }
-        else if (type == ChatMsg::CHAT_MSG_WHISPER)
-        {
-            if (MasterPlayer* toPlayer = ObjectAccessor::FindMasterPlayer(to.c_str()))
-            {
-                sNierManager->HandleNierChatCommand(_player, commandVector, toPlayer->GetSession()->nier_id);
-            }
-        }
-        else if (type == ChatMsg::CHAT_MSG_PARTY || type == ChatMsg::CHAT_MSG_RAID_LEADER)
-        {
-            sNierManager->HandleNierChatCommand(_player, commandVector, -1);
-        }
     }
 }
 

@@ -1,22 +1,6 @@
 #ifndef NIER_BASE_H
 #define NIER_BASE_H
 
-#ifndef DEFAULT_ACTION_LIMIT_DELAY
-#define DEFAULT_ACTION_LIMIT_DELAY 5000
-#endif
-
-#ifndef DEFAULT_MOVEMENT_UPDATE_DELAY
-#define DEFAULT_MOVEMENT_UPDATE_DELAY 100
-#endif
-
-#ifndef DEFAULT_MOVEMENT_CHECK_DELAY
-#define DEFAULT_MOVEMENT_CHECK_DELAY 500
-#endif
-
-#include "NierConfig.h"
-#include "NierManager.h"
-#include "NierActionTarget.h"
-
 enum NierAccountState :uint32
 {
     NierAccountState_None = 0,
@@ -53,6 +37,10 @@ enum NierActionState :uint32
     NierActionState_Assist,
     NierActionState_Rest,
     NierActionState_Freeze,
+    NierActionState_Assemble,
+    NierActionState_Bunch,
+    NierActionState_Revive,
+    NierActionState_Corpse,
 };
 
 enum NierGroupRole :uint32
@@ -69,33 +57,34 @@ public:
     virtual bool Attack(Unit* pTarget);
     virtual bool Tank(Unit* pTarget);
     virtual bool Heal(Unit* pTarget);
-    virtual bool Follow(Unit* pTarget);
     virtual bool Cure(Unit* pTarget);
     virtual bool Buff(Unit* pTarget);
     virtual bool Revive(Unit* pTarget);
     virtual bool InitializeCharacter(uint32 pTargetLevel);
     virtual bool ResetTalentsAndSpells();
-    virtual bool InitializeEquipments(bool pmReset = false);
+    virtual void EquipRandomItem(uint32 pEquipSlot);
 
     void Prepare();
-    void Update(uint32 pDiff);
-    bool UpdateNierAccount(uint32 pElapsed);
-    bool UpdateNierAction(uint32 pElapsed);
-    bool UpdateNierAwareness(uint32 pElapsed);
+    void Update(uint64 pTimeValue);
+    bool UpdateAccount();
+    bool UpdateAction();
+    bool UpdateMind();
 
     bool Idle();
     bool Wander();
     bool PVE();
     bool PVP();
+    bool Follow();
+    bool Chase(Unit* pTarget, float pDistance = CONTACT_DISTANCE);
 
     void RemoveEquipments();
-    void LearnTalent(uint32 pmTalentId, uint32 pmMaxRank = MAX_TALENT_RANK);
-    void TrainSpells(uint32 pmTrainerEntry);
-    void EquipRandomItem(uint32 pmEquipSlot, uint32 pmClass, uint32 pmSubclass, uint32 pmMinQuality, int pmModType, std::unordered_set<uint32> pmInventoryTypeSet = std::unordered_set<uint32>());
+    void EquipOne(uint32 pEquipSlot, uint32 pItemClass, uint32 pItemSubclass, uint32 pInventoryType, uint32 pMinReqLevel, uint32 pMaxReqLevel);
+    void LearnTalent(uint32 pTalentId, uint32 pMaxRank = MAX_TALENT_RANK);
+    void TrainSpells(uint32 pTrainerEntry);
     void PetAttack(Unit* pmTarget);
     void PetStop();
-    bool UseItem(Item* pmItem, Unit* pmTarget);
-    bool UseItem(Item* pmItem, Item* pmTarget);
+    bool UseItem(Item* pItem, Unit* pTarget);
+    bool UseItem(Item* pItem, Item* pTarget);
     bool CastSpell(Unit* pmTarget, uint32 pmSpellId, bool pmCheckAura = false, bool pmOnlyMyAura = false, bool pmClearShapeShift = false, uint32 pmMaxAuraStack = 1);
     void CancelAura(uint32 pmSpellID);
     bool Rest();
@@ -103,17 +92,25 @@ public:
     bool Drink();
     bool HealthPotion();
     bool ManaPotion();
+    void MoveToPosition(Position pTargetpos, bool pRun = true);
 
-    void ChooseTarget(Unit* pmTarget);
+    void ChooseTarget(Unit* pTarget);
     void ClearTarget();
-    bool SpellValid(uint32 pmSpellID);
+    void ClearAction();
+    bool SpellValid(uint32 pSpellID);
     Item* GetItemInInventory(uint32 pmEntry);
-
-    int checkDelay;
-    int elapsed;
+    Player* GetNearbyHostilePlayer();
+    Unit* GetNearbyHostileUnit();
 
     Player* me;
-    NierActionTarget* actionTarget;
+
+    uint32 actionDuration;
+    uint32 actionTimeLimit;
+    Unit* actionTargetUnit;
+    Position actionTargetPos;
+    uint32 actionTargetSpell;
+
+    float followDistance;
 
     uint32 specialty;
     uint32 accountState;
@@ -129,6 +126,8 @@ public:
     uint32 target_class;
     uint32 target_specialty;
 
-    int assembleDelay;
+    uint64 timeValue;    
+    int checkDelay;
+
 };
 #endif

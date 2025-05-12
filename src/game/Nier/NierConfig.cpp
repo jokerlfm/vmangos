@@ -32,7 +32,6 @@ NierConfig::NierConfig()
 {
     Enable = 0;
     Reset = 0;
-    NierCount = 0;
 }
 
 NierConfig::~NierConfig()
@@ -103,7 +102,6 @@ bool NierConfig::StartNier()
 
     Enable = GetIntDefault("Enable", 0);
     Reset = GetIntDefault("Reset", 0);
-    NierCount = GetIntDefault("NierCount", 5);
 
     if (Enable == 0)
     {

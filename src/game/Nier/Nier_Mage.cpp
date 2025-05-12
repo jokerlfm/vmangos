@@ -28,7 +28,7 @@ Nier_Mage::Nier_Mage() :Nier_Base()
     aura_Fingers_Of_Frost = 0;
     aura_Fireball = 0;
     item_ManaGem = 0;
-    spell_Portal_Exodar;
+    spell_Portal_Exodar = 0;
     spell_Portal_Dalaran = 0;
     spell_Portal_Orgrimmar = 0;
     spell_Portal_Stormwind = 0;
@@ -48,11 +48,21 @@ bool Nier_Mage::Attack(Unit* pTarget)
         return false;
     }
 
-    if (spell_Frostbolt > 0)
+    float targetDistance = me->GetDistance(pTarget);
+    if (targetDistance > VISIBILITY_DISTANCE_NORMAL)
     {
-        if (CastSpell(pTarget, spell_Frostbolt))
+        return false;
+    }
+
+    ChooseTarget(pTarget);
+    if (Chase(pTarget, VISIBILITY_DISTANCE_TINY))
+    {
+        if (spell_Frostbolt > 0)
         {
-            return true;
+            if (CastSpell(pTarget, spell_Frostbolt))
+            {
+                return true;
+            }
         }
     }
 
@@ -79,16 +89,6 @@ bool Nier_Mage::Heal(Unit* pTarget)
     return false;
 }
 
-bool Nier_Mage::Follow(Unit* pTarget)
-{
-    if (!Nier_Base::Follow(pTarget))
-    {
-        return false;
-    }
-
-    return true;
-}
-
 bool Nier_Mage::Cure(Unit* pTarget)
 {
     if (!Nier_Base::Cure(pTarget))
@@ -104,6 +104,34 @@ bool Nier_Mage::Buff(Unit* pTarget)
     if (!Nier_Base::Buff(pTarget))
     {
         return false;
+    }
+
+    float targetDistance = me->GetDistance(pTarget);
+    if (targetDistance > VISIBILITY_DISTANCE_TINY)
+    {
+        return false;
+    }
+
+    bool doBuff = true;
+    if (spell_ArcaneBrilliance > 0 || spell_ArcaneIntellect > 0)
+    {
+        if (!pTarget->HasAura(spell_ArcaneBrilliance) && !pTarget->HasAura(spell_ArcaneIntellect))
+        {
+            if (spell_ArcaneBrilliance > 0)
+            {
+                if (CastSpell(pTarget, spell_ArcaneBrilliance))
+                {
+                    return true;
+                }
+            }
+            else if (spell_ArcaneIntellect > 0)
+            {
+                if (CastSpell(pTarget, spell_ArcaneIntellect))
+                {
+                    return true;
+                }
+            }
+        }
     }
 
     return false;
@@ -478,160 +506,121 @@ bool Nier_Mage::ResetTalentsAndSpells()
     return true;
 }
 
-bool Nier_Mage::InitializeEquipments(bool pmReset)
+void Nier_Mage::EquipRandomItem(uint32 pEquipSlot)
 {
-    if (!me)
+    uint32 itemClass = 0;
+    uint32 itemSubclass = 0;
+    uint32 inventoryType = 0;
+    if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_HEAD)
     {
-        return true;
+        itemClass = 4;
+        itemSubclass = 1;
+        inventoryType = 1;
     }
-    if (pmReset)
+    else if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_SHOULDERS)
     {
-        for (uint8 slot = INVENTORY_SLOT_ITEM_START; slot < INVENTORY_SLOT_ITEM_END; ++slot)
-        {
-            if (Item* inventoryItem = me->GetItemByPos(INVENTORY_SLOT_BAG_0, slot))
-            {
-                me->DestroyItem(INVENTORY_SLOT_BAG_0, slot, true);
-            }
-        }
-        for (uint32 checkEquipSlot = EquipmentSlots::EQUIPMENT_SLOT_HEAD; checkEquipSlot < EquipmentSlots::EQUIPMENT_SLOT_TABARD; checkEquipSlot++)
-        {
-            if (Item* currentEquip = me->GetItemByPos(INVENTORY_SLOT_BAG_0, checkEquipSlot))
-            {
-                me->DestroyItem(INVENTORY_SLOT_BAG_0, checkEquipSlot, true);
-            }
-        }
+        itemClass = 4;
+        itemSubclass = 1;
+        inventoryType = 3;
     }
-    uint32 myLevel = me->GetLevel();
-    uint32 minQuality = ItemQualities::ITEM_QUALITY_UNCOMMON;
-    if (myLevel < 20)
+    else if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_WRISTS)
     {
-        minQuality = ItemQualities::ITEM_QUALITY_POOR;
+        itemClass = 4;
+        itemSubclass = 1;
+        inventoryType = 9;
     }
-    for (uint32 checkEquipSlot = EquipmentSlots::EQUIPMENT_SLOT_HEAD; checkEquipSlot < EquipmentSlots::EQUIPMENT_SLOT_TABARD; checkEquipSlot++)
+    else if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_WAIST)
     {
-        if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_HEAD)
-        {
-            if (myLevel < 30)
-            {
-                continue;
-            }
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_SHOULDERS)
-        {
-            if (myLevel < 30)
-            {
-                continue;
-            }
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_NECK)
-        {
-            if (myLevel < 30)
-            {
-                continue;
-            }
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_FINGER1 || checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_FINGER2)
-        {
-            if (myLevel < 30)
-            {
-                continue;
-            }
-        }
-        std::unordered_set<uint32> inventoryTypeSet;
-        uint32 modType = ItemModType::ITEM_MOD_INTELLECT;
-        uint32 equipItemClass = 0;
-        uint32 equipItemSubClass = 0;
-        if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_HEAD)
-        {
-            equipItemClass = 4;
-            equipItemSubClass = 1;
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_SHOULDERS)
-        {
-            equipItemClass = 4;
-            equipItemSubClass = 1;
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_WRISTS)
-        {
-            equipItemClass = 4;
-            equipItemSubClass = 1;
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_WAIST)
-        {
-            equipItemClass = 4;
-            equipItemSubClass = 1;
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_FEET)
-        {
-            equipItemClass = 4;
-            equipItemSubClass = 1;
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_HANDS)
-        {
-            equipItemClass = 4;
-            equipItemSubClass = 1;
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_CHEST)
-        {
-            equipItemClass = 4;
-            equipItemSubClass = 1;
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_LEGS)
-        {
-            equipItemClass = 4;
-            equipItemSubClass = 1;
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_BACK)
-        {
-            equipItemClass = 4;
-            equipItemSubClass = 1;
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_NECK)
-        {
-            equipItemClass = 4;
-            equipItemSubClass = 0;
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_FINGER1)
-        {
-            equipItemClass = 4;
-            equipItemSubClass = 0;
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_FINGER2)
-        {
-            equipItemClass = 4;
-            equipItemSubClass = 0;
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_MAINHAND)
-        {
-            equipItemClass = 2;
-            equipItemSubClass = 10;
-        }
-        else if (checkEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_RANGED)
-        {
-            equipItemClass = 2;
-            equipItemSubClass = 19;
-            inventoryTypeSet.insert(InventoryType::INVTYPE_RANGEDRIGHT);
-        }
-        else
-        {
-            continue;
-        }
-        if (Item* currentEquip = me->GetItemByPos(INVENTORY_SLOT_BAG_0, checkEquipSlot))
-        {
-            if (const ItemPrototype* checkIT = currentEquip->GetProto())
-            {
-                if (checkIT->Quality >= minQuality)
-                {
-                    continue;
-                }
-                else
-                {
-                    me->DestroyItem(INVENTORY_SLOT_BAG_0, checkEquipSlot, true);
-                }
-            }
-        }
-        EquipRandomItem(checkEquipSlot, equipItemClass, equipItemSubClass, minQuality, modType, inventoryTypeSet);
+        itemClass = 4;
+        itemSubclass = 1;
+        inventoryType = 6;
+    }
+    else if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_FEET)
+    {
+        itemClass = 4;
+        itemSubclass = 1;
+        inventoryType = 8;
+    }
+    else if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_HANDS)
+    {
+        itemClass = 4;
+        itemSubclass = 1;
+        inventoryType = 10;
+    }
+    else if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_CHEST)
+    {
+        itemClass = 4;
+        itemSubclass = 1;
+        inventoryType = 5;
+    }
+    else if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_LEGS)
+    {
+        itemClass = 4;
+        itemSubclass = 1;
+        inventoryType = 7;
+    }
+    else if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_BACK)
+    {
+        itemClass = 4;
+        itemSubclass = 1;
+        inventoryType = 16;
+    }
+    else if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_NECK)
+    {
+        itemClass = 4;
+        itemSubclass = 0;
+        inventoryType = 2;
+    }
+    else if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_FINGER1)
+    {
+        itemClass = 4;
+        itemSubclass = 0;
+        inventoryType = 11;
+    }
+    else if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_FINGER2)
+    {
+        itemClass = 4;
+        itemSubclass = 0;
+        inventoryType = 11;
+    }
+    else if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_MAINHAND)
+    {
+        itemClass = 2;
+        itemSubclass = 10;
+        inventoryType = InventoryType::INVTYPE_2HWEAPON;
+    }
+    else if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_OFFHAND)
+    {
+        inventoryType = 0;
+    }
+    else if (pEquipSlot == EquipmentSlots::EQUIPMENT_SLOT_RANGED)
+    {
+        itemClass = 2;
+        itemSubclass = 19;
+        inventoryType = InventoryType::INVTYPE_RANGEDRIGHT;
+    }
+    else
+    {
+        return;
+    }
+    if (inventoryType == 0)
+    {
+        return;
+    }
+    int maxReqLevel = me->GetLevel();
+    int minReqLevel = maxReqLevel - 10;
+    if (minReqLevel < 0)
+    {
+        minReqLevel = 0;
     }
 
-    return true;
+    if (Item* currentEquip = me->GetItemByPos(INVENTORY_SLOT_BAG_0, pEquipSlot))
+    {
+        if (currentEquip->GetProto()->RequiredLevel < minReqLevel)
+        {
+            me->DestroyItem(INVENTORY_SLOT_BAG_0, pEquipSlot, true);
+        }
+    }
+
+    EquipOne(pEquipSlot, itemClass, itemSubclass, inventoryType, minReqLevel, maxReqLevel);
 }

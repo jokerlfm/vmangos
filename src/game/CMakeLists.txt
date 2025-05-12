@@ -459,10 +459,7 @@ set (game_SRCS
     Nier/NierConfig.h
     Nier/NierManager.cpp
     Nier/NierManager.h
-	
-    Nier/NierActionTarget.cpp
-    Nier/NierActionTarget.h
-	
+	    
     Nier/Nier_Base.cpp
     Nier/Nier_Base.h
     Nier/Nier_Druid.cpp

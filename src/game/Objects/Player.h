@@ -45,6 +45,9 @@
 #include <functional>
 #include <shared_mutex>
 
+// lfm nier 
+#include "Nier/Nier_Base.h"
+
 struct Mail;
 struct ItemPrototype;
 struct AuraSaveStruct;
@@ -736,8 +739,9 @@ class Player final: public Unit
         // lfm auto fish
         int fishingDelay;
 
-        // lfm nier
+        // lfm nier         
         uint32 nierGroupRole;
+        Nier_Base* nier;
 
         void CleanupsBeforeDelete() override;
 

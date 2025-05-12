@@ -26,7 +26,7 @@ class MingManager
 public:
     void InitializeManager();
     void Clean();
-    bool UpdateMing(uint32 pDiff);
+    bool Update(uint32 pDiff);
 
     bool StringEndWith(const std::string& str, const std::string& tail);
     bool StringStartWith(const std::string& str, const std::string& head);

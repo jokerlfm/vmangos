@@ -325,6 +325,7 @@ Player::Player(WorldSession* session) : Unit(),
 
     // lfm nier 
     nierGroupRole = 0;
+    nier = nullptr;
 }
 
 Player::~Player()

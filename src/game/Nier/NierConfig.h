@@ -51,7 +51,6 @@ public:
     bool StartNier();
     uint32 Enable;
     uint32 Reset;
-    uint32 NierCount;
 
     std::vector<std::string> SplitString(std::string srcStr, std::string delimStr, bool repeatedCharIgnored);
     std::string TrimString(std::string srcStr);

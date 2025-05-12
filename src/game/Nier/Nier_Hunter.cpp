@@ -54,16 +54,6 @@ bool Nier_Hunter::Heal(Unit* pTarget)
     return false;
 }
 
-bool Nier_Hunter::Follow(Unit* pTarget)
-{
-    if (!Nier_Base::Follow(pTarget))
-    {
-        return false;
-    }
-
-    return true;
-}
-
 bool Nier_Hunter::Cure(Unit* pTarget)
 {
     if (!Nier_Base::Cure(pTarget))
@@ -114,12 +104,7 @@ bool Nier_Hunter::ResetTalentsAndSpells()
     return true;
 }
 
-bool Nier_Hunter::InitializeEquipments(bool pmReset)
+void Nier_Hunter::EquipRandomItem(uint32 pEquipSlot)
 {
-    if (!Nier_Base::InitializeEquipments(pmReset))
-    {
-        return false;
-    }
 
-    return true;
 }

@@ -2156,10 +2156,10 @@ void World::Update(uint32 diff)
         sTerrainMgr.Update(diff);
 
     // lfm ming update 
-    sMingManager->UpdateMing(diff);
+    sMingManager->Update(diff);
 
     // lfm nier update
-    sNierManager->UpdateNier(diff);
+    sNierManager->Update(diff);
 }
 
 // Send a packet to all players (except self if mentioned)
@@ -2708,6 +2708,9 @@ void World::ShutdownServ(uint32 time, uint32 options, uint8 exitcode)
 
     // lfm disable ming 
     sMingConfig.Enable = 0;
+
+    // lfm nier log out all
+    sNierManager->LogoutNiers(true);
 
     m_ShutdownMask = options;
     m_ExitCode = exitcode;
