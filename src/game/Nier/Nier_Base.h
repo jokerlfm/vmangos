@@ -18,10 +18,8 @@ enum NierAccountState :uint32
     NierAccountState_Equip,
     NierAccountState_Online,
     NierAccountState_Exit,
-    NierAccountState_CheckLogoff,
-    NierAccountState_DoLogoff,
-    NierAccountState_RedoLogin,
-    NierAccountState_CheckRedoLogin,
+    NierAccountState_CheckLogout,
+    NierAccountState_DoLogout,
 };
 
 enum NierActionState :uint32
@@ -38,9 +36,10 @@ enum NierActionState :uint32
     NierActionState_Rest,
     NierActionState_Freeze,
     NierActionState_Assemble,
-    NierActionState_Bunch,
+    NierActionState_Formation,
     NierActionState_Revive,
     NierActionState_Corpse,
+    NierActionState_Teleport,
 };
 
 enum NierGroupRole :uint32
@@ -76,6 +75,7 @@ public:
     bool PVP();
     bool Follow();
     bool Chase(Unit* pTarget, float pDistance = CONTACT_DISTANCE);
+    bool Teleport(uint32 pMapId, float pX, float pY, float pZ, float pO = 0.0f);
 
     void RemoveEquipments();
     void EquipOne(uint32 pEquipSlot, uint32 pItemClass, uint32 pItemSubclass, uint32 pInventoryType, uint32 pMinReqLevel, uint32 pMaxReqLevel);
@@ -101,6 +101,8 @@ public:
     Item* GetItemInInventory(uint32 pmEntry);
     Player* GetNearbyHostilePlayer();
     Unit* GetNearbyHostileUnit();
+
+    bool creating;
 
     Player* me;
 

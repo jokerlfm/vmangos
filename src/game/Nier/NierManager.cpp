@@ -194,7 +194,7 @@ void NierManager::LogoutNiers(bool pmInstant)
             }
             else
             {
-                reIT->second->accountState = NierAccountState::NierAccountState_DoLogoff;
+                reIT->second->accountState = NierAccountState::NierAccountState_DoLogout;
                 reIT->second->checkDelay = urand(1 * IN_MILLISECONDS, 3 * IN_MILLISECONDS);
             }
         }
@@ -531,6 +531,10 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
                     LoginNiers(pCommander->GetGUIDLow());
                 }
             }
+            if (nierAction == "logout")
+            {
+                LogoutNiers();
+            }
             else if (nierAction == "create")
             {
                 uint32 playerLevel = pCommander->GetLevel();
@@ -548,7 +552,8 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
                     else
                     {
                         std::unordered_set<uint32> nierClassSet;
-                        nierClassSet.insert(Classes::CLASS_WARRIOR);
+                        nierClassSet.insert(Classes::CLASS_DRUID);
+                        //nierClassSet.insert(Classes::CLASS_WARRIOR);
                         nierClassSet.insert(Classes::CLASS_MAGE);
                         nierClassSet.insert(Classes::CLASS_ROGUE);
                         nierClassSet.insert(Classes::CLASS_PRIEST);
@@ -574,46 +579,92 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
     }
     else if (commandName == "equip")
     {
-        if (chatTarget->IsAlive())
+        if (chatTarget->nier)
         {
-            if (chatTarget->nier)
+            if (chatTarget->IsInWorld())
             {
-                if (!chatTarget->IsInCombat())
+                if (chatTarget->IsAlive())
                 {
-                    if (commandVector.size() > 1)
+                    if (!chatTarget->IsInCombat())
                     {
-                        std::string reset = commandVector.at(1);
-                        if (reset == "reset")
+                        if (commandVector.size() > 1)
                         {
-                            chatTarget->nier->RemoveEquipments();
+                            std::string reset = commandVector.at(1);
+                            if (reset == "reset")
+                            {
+                                chatTarget->nier->RemoveEquipments();
+                            }
+                        }
+                        for (uint32 equipSlot = EquipmentSlots::EQUIPMENT_SLOT_HEAD; equipSlot < EquipmentSlots::EQUIPMENT_SLOT_TABARD; equipSlot++)
+                        {
+                            chatTarget->nier->EquipRandomItem(equipSlot);
                         }
                     }
-                    for (uint32 equipSlot = EquipmentSlots::EQUIPMENT_SLOT_HEAD; equipSlot < EquipmentSlots::EQUIPMENT_SLOT_TABARD; equipSlot++)
+                    else
                     {
-                        chatTarget->nier->EquipRandomItem(equipSlot);
+                        replyStream << "in combat";
                     }
                 }
                 else
                 {
-                    replyStream << "in combat";
+                    replyStream << "dead";
                 }
+            }
+            else
+            {
+                replyStream << "not in world";
             }
         }
     }
     else if (commandName == "assemble")
     {
-        chatTarget->nier->actionState = NierActionState::NierActionState_Assemble;
-        chatTarget->nier->actionTimeLimit = urand(10000, 20000);
-        chatTarget->nier->actionTargetUnit = pCommander;
-        int assembleSeconds = chatTarget->nier->actionTimeLimit / 1000;
-        replyStream << "assemble in " << assembleSeconds << " seconds";
+        if (chatTarget->nier)
+        {
+            if (chatTarget->IsInWorld())
+            {
+                chatTarget->nier->actionState = NierActionState::NierActionState_Assemble;
+                chatTarget->nier->actionTimeLimit = urand(10000, 20000);
+                chatTarget->nier->actionTargetUnit = pCommander;
+                int assembleSeconds = chatTarget->nier->actionTimeLimit / 1000;
+                replyStream << "assemble in " << assembleSeconds << " seconds";
+            }
+            else
+            {
+                replyStream << "not in world";
+            }
+        }
     }
-    else if (commandName == "bunch")
+    else if (commandName == "formation")
     {
-        chatTarget->nier->actionState = NierActionState::NierActionState_Bunch;
-        chatTarget->nier->actionTimeLimit = 5000;
-        chatTarget->nier->actionTargetUnit = pCommander;
-        replyStream << "bunch up";
+        if (chatTarget->nier)
+        {
+            if (chatTarget->IsInWorld())
+            {
+                if (chatTarget->IsAlive())
+                {
+                    if (commandVector.size() > 1)
+                    {
+                        std::string formation = commandVector.at(1);
+                        if (formation == "point")
+                        {
+                            chatTarget->nier->actionState = NierActionState::NierActionState_Formation;
+                            chatTarget->nier->actionTimeLimit = 5000;
+                            chatTarget->nier->actionTargetUnit = pCommander;
+                            chatTarget->nier->actionTargetPos = pCommander->GetPosition();
+                        }
+                        replyStream << "formation";
+                    }
+                }
+                else
+                {
+                    replyStream << "dead";
+                }
+            }
+            else
+            {
+                replyStream << "not in world";
+            }
+        }
     }
     else if (commandName == "leader")
     {
@@ -633,120 +684,250 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
     }
     else if (commandName == "engage")
     {
-        if (Unit* target = pCommander->GetSelectedUnit())
+        if (chatTarget->nier)
         {
-            switch (chatTarget->nierGroupRole)
+            if (chatTarget->IsInWorld())
             {
-            case NierGroupRole::NierGroupRole_Tank:
-            {
-                if (chatTarget->nier->Tank(target))
+                if (chatTarget->IsAlive())
                 {
-                    chatTarget->nier->actionState = NierActionState::NierActionState_Tank;
-                    chatTarget->nier->actionTargetUnit = target;
-                    chatTarget->nier->actionDuration = 0;
-                    chatTarget->nier->actionTargetPos = target->GetPosition();
-                    chatTarget->nier->actionTimeLimit = 5000;
+                    if (Unit* target = pCommander->GetSelectedUnit())
+                    {
+                        switch (chatTarget->nierGroupRole)
+                        {
+                        case NierGroupRole::NierGroupRole_Tank:
+                        {
+                            if (chatTarget->nier->Tank(target))
+                            {
+                                chatTarget->nier->actionState = NierActionState::NierActionState_Tank;
+                                chatTarget->nier->actionTargetUnit = target;
+                                chatTarget->nier->actionDuration = 0;
+                                chatTarget->nier->actionTargetPos = target->GetPosition();
+                                chatTarget->nier->actionTimeLimit = 5000;
+                            }
+                            break;
+                        }
+                        case NierGroupRole::NierGroupRole_Healer:
+                        {
+                            break;
+                        }
+                        case NierGroupRole::NierGroupRole_DPS:
+                        {
+                            if (chatTarget->nier->Attack(target))
+                            {
+                                chatTarget->nier->actionState = NierActionState::NierActionState_Attack;
+                                chatTarget->nier->actionTargetUnit = target;
+                                chatTarget->nier->actionDuration = 0;
+                                chatTarget->nier->actionTargetPos = target->GetPosition();
+                                chatTarget->nier->actionTimeLimit = 5000;
+                            }
+                            break;
+                        }
+                        }
+                    }
                 }
-                break;
-            }
-            case NierGroupRole::NierGroupRole_Healer:
-            {
-                break;
-            }
-            case NierGroupRole::NierGroupRole_DPS:
-            {
-                if (chatTarget->nier->Attack(target))
+                else
                 {
-                    chatTarget->nier->actionState = NierActionState::NierActionState_Attack;
-                    chatTarget->nier->actionTargetUnit = target;
-                    chatTarget->nier->actionDuration = 0;
-                    chatTarget->nier->actionTargetPos = target->GetPosition();
-                    chatTarget->nier->actionTimeLimit = 5000;
+                    replyStream << "dead";
                 }
-                break;
             }
+            else
+            {
+                replyStream << "not in world";
+            }
+        }
+    }
+    else if (commandName == "dps")
+    {
+        if (chatTarget->nier)
+        {
+            if (chatTarget->IsInWorld())
+            {
+                if (chatTarget->IsAlive())
+                {
+                    if (Unit* target = pCommander->GetSelectedUnit())
+                    {
+                        switch (chatTarget->nierGroupRole)
+                        {
+                        case NierGroupRole::NierGroupRole_Tank:
+                        {
+                            break;
+                        }
+                        case NierGroupRole::NierGroupRole_Healer:
+                        {
+                            break;
+                        }
+                        case NierGroupRole::NierGroupRole_DPS:
+                        {
+                            if (chatTarget->nier->Attack(target))
+                            {
+                                chatTarget->nier->actionState = NierActionState::NierActionState_Attack;
+                                chatTarget->nier->actionTargetUnit = target;
+                                chatTarget->nier->actionDuration = 0;
+                                chatTarget->nier->actionTargetPos = target->GetPosition();
+                                chatTarget->nier->actionTimeLimit = 5000;
+                            }
+                            break;
+                        }
+                        }
+                    }
+                }
+                else
+                {
+                    replyStream << "dead";
+                }
+            }
+            else
+            {
+                replyStream << "not in world";
             }
         }
     }
     else if (commandName == "tank")
     {
-        if (Unit* target = pCommander->GetSelectedUnit())
+        if (chatTarget->nier)
         {
-            switch (chatTarget->nierGroupRole)
+            if (chatTarget->IsInWorld())
             {
-            case NierGroupRole::NierGroupRole_Tank:
-            {
-                if (chatTarget->nier->Tank(target))
+                if (chatTarget->IsAlive())
                 {
-                    if (Group* tankGroup = chatTarget->GetGroup())
+                    if (Unit* target = pCommander->GetSelectedUnit())
                     {
-                        tankGroup->SetTargetIcon(7, target->GetObjectGuid());
+                        switch (chatTarget->nierGroupRole)
+                        {
+                        case NierGroupRole::NierGroupRole_Tank:
+                        {
+                            if (chatTarget->nier->Tank(target))
+                            {
+                                chatTarget->nier->actionState = NierActionState::NierActionState_Tank;
+                                chatTarget->nier->actionTargetUnit = target;
+                                chatTarget->nier->actionDuration = 0;
+                                chatTarget->nier->actionTargetPos = target->GetPosition();
+                                chatTarget->nier->actionTimeLimit = 5000;
+                            }
+                            break;
+                        }
+                        case NierGroupRole::NierGroupRole_Healer:
+                        {
+                            break;
+                        }
+                        case NierGroupRole::NierGroupRole_DPS:
+                        {
+                            break;
+                        }
+                        }
                     }
-                    chatTarget->nier->actionState = NierActionState::NierActionState_Tank;
-                    chatTarget->nier->actionTargetUnit = target;
-                    chatTarget->nier->actionDuration = 0;
-                    chatTarget->nier->actionTargetPos = target->GetPosition();
-                    chatTarget->nier->actionTimeLimit = 5000;
                 }
-                break;
+                else
+                {
+                    replyStream << "dead";
+                }
             }
-            case NierGroupRole::NierGroupRole_Healer:
+            else
             {
-                break;
-            }
-            case NierGroupRole::NierGroupRole_DPS:
-            {
-                break;
-            }
+                replyStream << "not in world";
             }
         }
     }
     else if (commandName == "freeze")
     {
-        if (chatTarget->IsAlive())
+        if (chatTarget->nier)
         {
-            chatTarget->StopMoving();
-            chatTarget->GetMotionMaster()->Clear();
-            chatTarget->CombatStop(true);
+            if (chatTarget->IsInWorld())
+            {
+                if (chatTarget->IsAlive())
+                {
+                    chatTarget->StopMoving();
+                    chatTarget->GetMotionMaster()->Clear();
+                    chatTarget->CombatStop(true);
+                }
+                chatTarget->nier->ClearAction();
+                chatTarget->nier->actionState = NierActionState::NierActionState_Freeze;
+                chatTarget->nier->actionTimeLimit = 3600000;
+                replyStream << "freezing";
+            }
+            else
+            {
+                replyStream << "not in world";
+            }
         }
-        chatTarget->nier->ClearAction();
-        chatTarget->nier->actionState = NierActionState::NierActionState_Freeze;
-        chatTarget->nier->actionTimeLimit = 3600000;
-        replyStream << "freezing";
     }
     else if (commandName == "follow")
     {
-        if (chatTarget->IsAlive())
+        if (chatTarget->nier)
         {
-            chatTarget->nier->ClearAction();
-            chatTarget->nier->actionState = NierActionState::NierActionState_Follow;
-            chatTarget->nier->actionTimeLimit = 2000;
-            replyStream << "following";
-        }
-        else
-        {
-            replyStream << "can not follow";
+            if (chatTarget->IsInWorld())
+            {
+                if (chatTarget->IsAlive())
+                {
+                    chatTarget->nier->ClearAction();
+                    chatTarget->nier->actionState = NierActionState::NierActionState_Follow;
+                    chatTarget->nier->actionTimeLimit = 2000;
+                    replyStream << "following";
+                }
+                else
+                {
+                    replyStream << "dead";
+                }
+            }
+            else
+            {
+                replyStream << "not in world";
+            }
         }
     }
     else if (commandName == "rest")
     {
-        if (chatTarget->nier->Rest())
+        if (chatTarget->nier)
         {
-            chatTarget->nier->actionState = NierActionState::NierActionState_Rest;
-            chatTarget->nier->actionTimeLimit = 15000;
+            if (chatTarget->IsInWorld())
+            {
+                if (chatTarget->IsAlive())
+                {
+                    if (chatTarget->nier->Rest())
+                    {
+                        chatTarget->nier->actionState = NierActionState::NierActionState_Rest;
+                        chatTarget->nier->actionTimeLimit = 15000;
+                    }
+                }
+                else
+                {
+                    replyStream << "dead";
+                }
+            }
+            else
+            {
+                replyStream << "not in world";
+            }
         }
     }
     else if (commandName == "revive")
     {
-        if (Unit* target = pCommander->GetSelectedUnit())
+        if (chatTarget->nier)
         {
-            if (chatTarget->nier->Revive(target))
+            if (chatTarget->IsInWorld())
             {
-                chatTarget->nier->actionState = NierActionState::NierActionState_Cast;
-                chatTarget->nier->actionTargetUnit = target;
-                chatTarget->nier->actionDuration = 0;
-                chatTarget->nier->actionTargetPos = target->GetPosition();
-                chatTarget->nier->actionTimeLimit = 5000;
+                if (chatTarget->IsAlive())
+                {
+                    if (Unit* target = pCommander->GetSelectedUnit())
+                    {
+                        if (chatTarget->nier->Revive(target))
+                        {
+                            chatTarget->nier->actionState = NierActionState::NierActionState_Cast;
+                            chatTarget->nier->actionTargetUnit = target;
+                            chatTarget->nier->actionDuration = 0;
+                            chatTarget->nier->actionTargetPos = target->GetPosition();
+                            chatTarget->nier->actionTimeLimit = 5000;
+                        }
+                    }
+                }
+                else
+                {
+                    replyStream << "dead";
+                }
+            }
+            else
+            {
+                replyStream << "not in world";
             }
         }
     }

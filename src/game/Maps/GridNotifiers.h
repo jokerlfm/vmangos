@@ -1451,7 +1451,21 @@ namespace MaNGOS
         AllCreaturesOfEntryInRange(WorldObject const* pObject, uint32 uiEntry, float fMaxRange) : m_pObject(pObject), m_uiEntry(uiEntry), m_fRange(fMaxRange) {}
         bool operator() (Unit* pUnit)
         {
-            return pUnit->GetEntry() == m_uiEntry && m_pObject->IsWithinDist(pUnit, m_fRange, false);
+            // lfm 0 entry is everyone
+            //return pUnit->GetEntry() == m_uiEntry && m_pObject->IsWithinDist(pUnit, m_fRange, false);
+            if (m_pObject->IsWithinDist(pUnit, m_fRange, false))
+            {
+                if (m_uiEntry > 0)
+                {
+                    if (m_uiEntry != pUnit->GetEntry())
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            return false;
         }
 
     private:

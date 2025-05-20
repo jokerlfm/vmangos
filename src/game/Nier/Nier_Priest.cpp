@@ -1,4 +1,5 @@
 #include "Nier_Priest.h"
+#include "SpellAuras.h"
 
 Nier_Priest::Nier_Priest()
 {
@@ -126,7 +127,7 @@ bool Nier_Priest::Heal(Unit* pTarget)
         }
     }
 
-    return true;
+    return false;
 }
 
 bool Nier_Priest::Cure(Unit* pTarget)
@@ -134,6 +135,40 @@ bool Nier_Priest::Cure(Unit* pTarget)
     if (!Nier_Base::Cure(pTarget))
     {
         return false;
+    }
+
+    std::multimap< uint32, SpellAuraHolder*> sahMap = pTarget->GetSpellAuraHolderMap();
+    for (std::multimap< uint32, SpellAuraHolder*>::iterator sahIT = sahMap.begin(); sahIT != sahMap.end(); sahIT++)
+    {
+        if (SpellAuraHolder* eachSAH = sahIT->second)
+        {
+            if (const SpellEntry* pS = eachSAH->GetSpellProto())
+            {
+                if (!pS->IsPositiveSpell())
+                {
+                    if (eachSAH->GetAuraDuration() > 60000)
+                    {
+                        if (pS->Dispel == DispelType::DISPEL_MAGIC)
+                        {
+                            if (CastSpell(pTarget, spell_DispelMagic))
+                            {
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            if (pS->Dispel == DispelType::DISPEL_DISEASE)
+                            {
+                                if (CastSpell(pTarget, spell_CureDisease))
+                                {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     return false;

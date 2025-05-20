@@ -43,6 +43,13 @@ public:
     uint32 aura_Eclipse_Solar;
     uint32 aura_Eclipse_Lunar;
 
-    ObjectGuid ogThornTarget;
+    uint32 spell_DemoralizingRoar;
+    uint32 spell_Enrage;
+    uint32 spell_BearForm;
+    uint32 spell_Bash;
+    uint32 spell_Maul;
+    uint32 spell_Swipe;
+    uint32 spell_Faerie_Fire_Feral;
+    uint32 spell_Growl;
 };
 #endif
