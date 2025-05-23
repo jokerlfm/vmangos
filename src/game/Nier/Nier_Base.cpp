@@ -660,21 +660,21 @@ bool Nier_Base::UpdateMind()
         case NierGroupRole::NierGroupRole_Tank:
         {
             // skull
-            ObjectGuid ogSkull = meGroup->GetGuidByTargetIcon(7);
-            if (!ogSkull.IsEmpty())
-            {
-                if (Unit* skull = ObjectAccessor::GetUnit(*me, ogSkull))
-                {
-                    float skullDistance = me->GetDistance(skull);
-                    if (skullDistance < VISIBILITY_DISTANCE_TINY)
-                    {
-                        if (Tank(skull))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
+            //ObjectGuid ogSkull = meGroup->GetGuidByTargetIcon(7);
+            //if (!ogSkull.IsEmpty())
+            //{
+            //    if (Unit* skull = ObjectAccessor::GetUnit(*me, ogSkull))
+            //    {
+            //        float skullDistance = me->GetDistance(skull);
+            //        if (skullDistance < VISIBILITY_DISTANCE_TINY)
+            //        {
+            //            if (Tank(skull))
+            //            {
+            //                return true;
+            //            }
+            //        }
+            //    }
+            //}
             // target
             if (Unit* enemy = me->GetSelectedUnit())
             {
@@ -714,13 +714,9 @@ bool Nier_Base::UpdateMind()
                 {
                     if (tank->IsInCombat())
                     {
-                        float tankDistance = me->GetDistance(tank);
-                        if (tankDistance < VISIBILITY_DISTANCE_NORMAL)
+                        if (Heal(tank))
                         {
-                            if (Heal(tank))
-                            {
-                                return true;
-                            }
+                            return true;
                         }
                     }
                 }
@@ -748,6 +744,24 @@ bool Nier_Base::UpdateMind()
                         if (Attack(skull))
                         {
                             return true;
+                        }
+                    }
+                }
+            }
+            // tank target 
+            ObjectGuid ogTank = meGroup->GetGuidByTargetIcon(0);
+            if (!ogTank.IsEmpty())
+            {
+                if (Player* tank = ObjectAccessor::FindPlayer(ogTank))
+                {
+                    if (tank->IsInCombat())
+                    {
+                        if (Unit* tTarget = tank->GetSelectedUnit())
+                        {
+                            if (Attack(tTarget))
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -1924,15 +1938,17 @@ void Nier_Base::MoveToPosition(Position pTargetpos, bool pRun)
 
 bool Nier_Base::Chase(Unit* pTarget, float pDistance)
 {
-    bool inPosition = false;
+    bool meInRange = false;
+    bool meInLos = false;
 
     if (pDistance < ATTACK_DISTANCE)
     {
         if (me->CanReachWithMeleeAutoAttack(pTarget))
         {
-            inPosition = true;
+            meInRange = true;
+            meInLos = true;
         }
-        else
+        if (!meInRange)
         {
             float destPosTargetDist = pTarget->GetDistance(actionTargetPos);
             if (destPosTargetDist > DEFAULT_COMBAT_REACH)
@@ -1957,14 +1973,37 @@ bool Nier_Base::Chase(Unit* pTarget, float pDistance)
     {
         if (me->GetDistance(pTarget) < pDistance)
         {
-            inPosition = true;
+            meInRange = true;
         }
-        else
+        if (me->IsWithinLOSInMap(pTarget))
         {
+            meInLos = true;
+        }
+        if (!meInRange || !meInLos)
+        {
+            bool destPosInRange = false;
+            bool destPosInLos = false;
             float destPosTargetDist = pTarget->GetDistance(actionTargetPos);
-            if (destPosTargetDist > pDistance)
+            if (destPosTargetDist < pDistance)
             {
-                pTarget->GetNearPoint(pTarget, actionTargetPos.x, actionTargetPos.y, actionTargetPos.z, 0.0f, pDistance - 1.0f, pTarget->GetAngle(me));
+                destPosInRange = true;
+            }
+            if (pTarget->IsWithinLOS(actionTargetPos.x, actionTargetPos.y, actionTargetPos.z, 1.0f))
+            {
+                destPosInLos = true;
+            }
+            if (!destPosInRange || !destPosInLos)
+            {
+                float dynDistance = pDistance - 1.0f;
+                while (dynDistance > CONTACT_DISTANCE)
+                {
+                    pTarget->GetNearPoint(pTarget, actionTargetPos.x, actionTargetPos.y, actionTargetPos.z, 0.0f, dynDistance, pTarget->GetAngle(me));
+                    if (pTarget->IsWithinLOS(actionTargetPos.x, actionTargetPos.y, actionTargetPos.z, 1.0f))
+                    {
+                        break;
+                    }
+                    dynDistance = dynDistance - 1.0f;
+                }
                 MoveToPosition(actionTargetPos);
             }
             else
@@ -1981,7 +2020,7 @@ bool Nier_Base::Chase(Unit* pTarget, float pDistance)
         }
     }
 
-    if (inPosition)
+    if (meInRange && meInLos)
     {
         if (me->IsMoving())
         {
@@ -1991,9 +2030,10 @@ bool Nier_Base::Chase(Unit* pTarget, float pDistance)
         {
             me->SetFacingTo(me->GetAngle(pTarget));
         }
+        return true;
     }
 
-    return inPosition;
+    return false;
 }
 
 bool Nier_Base::Teleport(uint32 pMapId, float pX, float pY, float pZ, float pO)
