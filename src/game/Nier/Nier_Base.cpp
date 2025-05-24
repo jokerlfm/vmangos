@@ -2084,7 +2084,7 @@ bool Nier_Base::Teleport(uint32 pMapId, float pX, float pY, float pZ, float pO)
         me->CombatStop(true);
         me->GetThreatManager().clearReferences();
     }
-    me->TeleportTo(pMapId, pX, pY, pZ, pO, TeleportToOptions::TELE_TO_FORCE_MAP_CHANGE | TeleportToOptions::TELE_TO_GM_MODE);
+    me->TeleportTo(pMapId, pX, pY, pZ, pO, TeleportToOptions::TELE_TO_GM_MODE);
     return true;
 }
 
