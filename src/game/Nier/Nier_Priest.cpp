@@ -64,7 +64,7 @@ bool Nier_Priest::Heal(Unit* pTarget)
     }
 
     ChooseTarget(pTarget);
-    if (Chase(pTarget))
+    if (Chase(pTarget, VISIBILITY_DISTANCE_TINY))
     {
         float targetHealthPct = pTarget->GetHealthPercent();
         if (targetHealthPct < 90.0f)

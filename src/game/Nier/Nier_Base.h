@@ -81,13 +81,13 @@ public:
     void EquipOne(uint32 pEquipSlot, uint32 pItemClass, uint32 pItemSubclass, uint32 pInventoryType, uint32 pMinReqLevel, uint32 pMaxReqLevel);
     void LearnTalent(uint32 pTalentId, uint32 pMaxRank = MAX_TALENT_RANK);
     void TrainSpells(uint32 pTrainerEntry);
-    void PetAttack(Unit* pmTarget);
+    void PetAttack(Unit* pTarget);
     void PetStop();
     bool UseItem(Item* pItem, Unit* pTarget);
     bool UseItem(Item* pItem, Item* pTarget);
-    bool CastSpell(Unit* pmTarget, uint32 pmSpellId, bool pmCheckAura = false, bool pmOnlyMyAura = false, bool pmClearShapeShift = false, uint32 pmMaxAuraStack = 1);
+    bool CastSpell(Unit* pTarget, uint32 pSpellId, bool pCheckAura = false, bool pOnlyMyAura = false, bool pClearShapeShift = false, uint32 pMaxAuraStack = 1);
     void CancelAura(uint32 pmSpellID);
-    bool Rest();
+    bool Rest(bool pForce = false);
     bool Eat();
     bool Drink();
     bool HealthPotion();
@@ -128,7 +128,7 @@ public:
     uint32 target_class;
     uint32 target_specialty;
 
-    uint64 timeValue;    
+    uint64 timeValue;
     int checkDelay;
 
 };

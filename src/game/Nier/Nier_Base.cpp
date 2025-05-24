@@ -659,22 +659,6 @@ bool Nier_Base::UpdateMind()
         {
         case NierGroupRole::NierGroupRole_Tank:
         {
-            // skull
-            //ObjectGuid ogSkull = meGroup->GetGuidByTargetIcon(7);
-            //if (!ogSkull.IsEmpty())
-            //{
-            //    if (Unit* skull = ObjectAccessor::GetUnit(*me, ogSkull))
-            //    {
-            //        float skullDistance = me->GetDistance(skull);
-            //        if (skullDistance < VISIBILITY_DISTANCE_TINY)
-            //        {
-            //            if (Tank(skull))
-            //            {
-            //                return true;
-            //            }
-            //        }
-            //    }
-            //}
             // target
             if (Unit* enemy = me->GetSelectedUnit())
             {
@@ -686,6 +670,40 @@ bool Nier_Base::UpdateMind()
                         if (Tank(enemy))
                         {
                             return true;
+                        }
+                    }
+                }
+            }
+            // skull
+            ObjectGuid ogSkull = meGroup->GetGuidByTargetIcon(7);
+            if (!ogSkull.IsEmpty())
+            {
+                if (Unit* skull = ObjectAccessor::GetUnit(*me, ogSkull))
+                {
+                    float skullDistance = me->GetDistance(skull);
+                    if (skullDistance < VISIBILITY_DISTANCE_TINY)
+                    {
+                        if (Tank(skull))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            // leader target 
+            if (Player* leader = ObjectAccessor::FindPlayer(meGroup->GetLeaderGuid()))
+            {
+                if (leader->IsInCombat())
+                {
+                    if (Unit* leaderTarget = leader->GetSelectedUnit())
+                    {
+                        float ltDistance = me->GetDistance(leaderTarget);
+                        if (ltDistance < INTERACTION_DISTANCE)
+                        {
+                            if (Tank(leaderTarget))
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -707,24 +725,19 @@ bool Nier_Base::UpdateMind()
         }
         case NierGroupRole::NierGroupRole_Healer:
         {
-            ObjectGuid ogTank = meGroup->GetGuidByTargetIcon(0);
-            if (!ogTank.IsEmpty())
-            {
-                if (Player* tank = ObjectAccessor::FindPlayer(ogTank))
-                {
-                    if (tank->IsInCombat())
-                    {
-                        if (Heal(tank))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
             if (me->IsInCombat())
             {
                 if (Heal(me))
                 {
+                    return true;
+                }
+            }
+            ObjectGuid ogTank = meGroup->GetGuidByTargetIcon(0);
+            if (Player* tank = ObjectAccessor::FindPlayer(ogTank))
+            {
+                if (tank->IsInCombat())
+                {
+                    Heal(tank);
                     return true;
                 }
             }
@@ -777,6 +790,24 @@ bool Nier_Base::UpdateMind()
                         if (Attack(enemy))
                         {
                             return true;
+                        }
+                    }
+                }
+            }
+            // leader target 
+            if (Player* leader = ObjectAccessor::FindPlayer(meGroup->GetLeaderGuid()))
+            {
+                if (leader->IsInCombat())
+                {
+                    if (Unit* leaderTarget = leader->GetSelectedUnit())
+                    {
+                        float ltDistance = me->GetDistance(leaderTarget);
+                        if (ltDistance < INTERACTION_DISTANCE)
+                        {
+                            if (Attack(leaderTarget))
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -896,7 +927,7 @@ bool Nier_Base::UpdateMind()
     return false;
 }
 
-bool Nier_Base::Rest()
+bool Nier_Base::Rest(bool pForce)
 {
     if (!me)
     {
@@ -918,7 +949,7 @@ bool Nier_Base::Rest()
     {
         mpp = me->GetPowerPercent(Powers::POWER_MANA);
     }
-    if (hpp < 50.0f || mpp < 50.0f)
+    if (pForce || hpp < 50.0f || mpp < 50.0f)
     {
         actionState = NierActionState::NierActionState_Rest;
         actionTimeLimit = 15000;
@@ -1088,7 +1119,7 @@ bool Nier_Base::Follow()
                 {
                     me->StopMoving();
                 }
-                if (!me->IsFacingTarget(leader))
+                if (!me->HasInArc(leader, M_PI_F / 8))
                 {
                     me->SetFacingTo(me->GetAngle(leader));
                 }
@@ -1343,7 +1374,7 @@ void Nier_Base::EquipRandomItem(uint32 pEquipSlot)
 
 }
 
-void Nier_Base::PetAttack(Unit* pmTarget)
+void Nier_Base::PetAttack(Unit* pTarget)
 {
     if (me)
     {
@@ -1353,7 +1384,7 @@ void Nier_Base::PetAttack(Unit* pmTarget)
             {
                 if (CreatureAI* cai = myPet->AI())
                 {
-                    cai->AttackStart(pmTarget);
+                    cai->AttackStart(pTarget);
                 }
             }
         }
@@ -1451,9 +1482,9 @@ bool Nier_Base::UseItem(Item* pItem, Item* pTarget)
     return false;
 }
 
-bool Nier_Base::CastSpell(Unit* pmTarget, uint32 pmSpellId, bool pmCheckAura, bool pmOnlyMyAura, bool pmClearShapeShift, uint32 pmMaxAuraStack)
+bool Nier_Base::CastSpell(Unit* pTarget, uint32 pSpellId, bool pCheckAura, bool pOnlyMyAura, bool pClearShapeShift, uint32 pMaxAuraStack)
 {
-    if (!SpellValid(pmSpellId))
+    if (!SpellValid(pSpellId))
     {
         return false;
     }
@@ -1465,42 +1496,42 @@ bool Nier_Base::CastSpell(Unit* pmTarget, uint32 pmSpellId, bool pmCheckAura, bo
     {
         return true;
     }
-    if (const SpellEntry* pS = sSpellMgr.GetSpellEntry(pmSpellId))
+    if (const SpellEntry* pS = sSpellMgr.GetSpellEntry(pSpellId))
     {
-        if (pmTarget)
+        if (pTarget)
         {
-            if (!me->IsWithinLOSInMap(pmTarget))
+            if (!me->IsWithinLOSInMap(pTarget))
             {
                 return false;
             }
-            if (pmTarget->IsImmuneToSpell(pS, false))
+            if (pTarget->IsImmuneToSpell(pS, false))
             {
                 return false;
             }
-            if (pmCheckAura)
+            if (pCheckAura)
             {
-                if (pmOnlyMyAura)
+                if (pOnlyMyAura)
                 {
-                    if (sNierManager->HasAura(pmTarget, pmSpellId, me))
+                    if (sNierManager->HasAura(pTarget, pSpellId, me))
                     {
                         return false;
                     }
                 }
                 else
                 {
-                    if (sNierManager->HasAura(pmTarget, pmSpellId))
+                    if (sNierManager->HasAura(pTarget, pSpellId))
                     {
                         return false;
                     }
                 }
             }
-            if (!me->IsFacingTarget(pmTarget))
+            if (!me->HasInArc(pTarget, M_PI_F / 8))
             {
-                me->SetFacingTo(me->GetAngle(pmTarget));
+                me->SetFacingTo(me->GetAngle(pTarget));
             }
-            if (me->GetTargetGuid() != pmTarget->GetObjectGuid())
+            if (me->GetTargetGuid() != pTarget->GetObjectGuid())
             {
-                ChooseTarget(pmTarget);
+                ChooseTarget(pTarget);
             }
         }
         for (size_t i = 0; i < MAX_SPELL_REAGENTS; i++)
@@ -1517,14 +1548,14 @@ bool Nier_Base::CastSpell(Unit* pmTarget, uint32 pmSpellId, bool pmCheckAura, bo
         {
             me->SetStandState(UNIT_STAND_STATE_STAND);
         }
-        if (pmClearShapeShift)
+        if (pClearShapeShift)
         {
             me->RemoveSpellsCausingAura(SPELL_AURA_MOD_SHAPESHIFT);
         }
-        //me->CastSpell(pmTarget, pS, TriggerCastFlags::TRIGGERED_NONE);
+        //me->CastSpell(pTarget, pS, TriggerCastFlags::TRIGGERED_NONE);
         //return true;
 
-        SpellCastResult scr = me->CastSpell(pmTarget, pS->Id, false);
+        SpellCastResult scr = me->CastSpell(pTarget, pS->Id, false);
         if (scr == SpellCastResult::SPELL_CAST_OK)
         {
             return true;
@@ -1938,12 +1969,18 @@ void Nier_Base::MoveToPosition(Position pTargetpos, bool pRun)
 
 bool Nier_Base::Chase(Unit* pTarget, float pDistance)
 {
+    if (me->GetObjectGuid() == pTarget->GetObjectGuid())
+    {
+        return true;
+    }
+
     bool meInRange = false;
     bool meInLos = false;
 
+    float targetDistance = me->GetDistance(pTarget);
     if (pDistance < ATTACK_DISTANCE)
     {
-        if (me->CanReachWithMeleeAutoAttack(pTarget))
+        if (targetDistance < MIN_MELEE_REACH)
         {
             meInRange = true;
             meInLos = true;
@@ -2026,7 +2063,7 @@ bool Nier_Base::Chase(Unit* pTarget, float pDistance)
         {
             me->StopMoving();
         }
-        if (!me->IsFacingTarget(pTarget))
+        if (!me->HasInArc(pTarget, M_PI_F / 8))
         {
             me->SetFacingTo(me->GetAngle(pTarget));
         }
@@ -2042,8 +2079,11 @@ bool Nier_Base::Teleport(uint32 pMapId, float pX, float pY, float pZ, float pO)
     {
         return false;
     }
-    me->CombatStop(true);
-    me->GetThreatManager().clearReferences();
+    if (me->IsAlive())
+    {
+        me->CombatStop(true);
+        me->GetThreatManager().clearReferences();
+    }
     me->TeleportTo(pMapId, pX, pY, pZ, pO, TeleportToOptions::TELE_TO_FORCE_MAP_CHANGE | TeleportToOptions::TELE_TO_GM_MODE);
     return true;
 }

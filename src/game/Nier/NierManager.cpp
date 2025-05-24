@@ -688,6 +688,10 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
         {
             if (chatTarget->IsInWorld())
             {
+                if (chatTarget->nier->actionState == NierActionState::NierActionState_Freeze)
+                {
+                    chatTarget->nier->ClearAction();
+                }
                 if (chatTarget->IsAlive())
                 {
                     if (Unit* target = pCommander->GetSelectedUnit())
@@ -742,6 +746,10 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
         {
             if (chatTarget->IsInWorld())
             {
+                if (chatTarget->nier->actionState == NierActionState::NierActionState_Freeze)
+                {
+                    chatTarget->nier->ClearAction();
+                }
                 if (chatTarget->IsAlive())
                 {
                     if (Unit* target = pCommander->GetSelectedUnit())
@@ -788,6 +796,10 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
         {
             if (chatTarget->IsInWorld())
             {
+                if (chatTarget->nier->actionState == NierActionState::NierActionState_Freeze)
+                {
+                    chatTarget->nier->ClearAction();
+                }
                 if (chatTarget->IsAlive())
                 {
                     if (Unit* target = pCommander->GetSelectedUnit())
@@ -883,7 +895,7 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
             {
                 if (chatTarget->IsAlive())
                 {
-                    if (chatTarget->nier->Rest())
+                    if (chatTarget->nier->Rest(true))
                     {
                         chatTarget->nier->actionState = NierActionState::NierActionState_Rest;
                         chatTarget->nier->actionTimeLimit = 15000;
