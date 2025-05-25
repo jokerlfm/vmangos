@@ -2585,11 +2585,17 @@ bool Creature::CanRespondToCallForHelpAgainst(Unit const* pEnemy) const
     if (HasFactionTemplateFlag(FACTION_TEMPLATE_FLEE_FROM_CALL_FOR_HELP))
         return false;
 
-    if (HasExtraFlag(CREATURE_FLAG_EXTRA_NO_ASSIST))
-        return false;
+    // lfm everyone can assist 
+    //if (HasExtraFlag(CREATURE_FLAG_EXTRA_NO_ASSIST))
+    //{
+    //    return false;
+    //}
 
-    if (HasReactState(REACT_PASSIVE))
-        return false;
+    // lfm passive can assist 
+    //if (HasReactState(REACT_PASSIVE))
+    //{
+    //    return false;
+    //}
 
     if (IsTempPacified())
         return false;

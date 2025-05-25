@@ -2148,81 +2148,87 @@ void ObjectMgr::LoadCreatureClassLevelStats()
                     cls.melee_damage = 1;
                 }
 
+                // lfm create damage min
+                if (cls.melee_damage <= 5.0f)
+                {
+                    cls.melee_damage = 5.0f;
+                }
+
                 if (cls.ranged_damage <= 0.0f)
                 {
-                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `ranged_damage` = %g in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.melee_damage, unitClass, level);
+                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `ranged_damage` = %g in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.ranged_damage, unitClass, level);
                     cls.ranged_damage = 1;
                 }
 
                 if (cls.attack_power <= 0)
                 {
-                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `attack_power` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.melee_damage, unitClass, level);
+                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `attack_power` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.attack_power, unitClass, level);
                     cls.attack_power = 1;
                 }
 
                 if (cls.ranged_attack_power <= 0)
                 {
-                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `ranged_attack_power` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.melee_damage, unitClass, level);
+                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `ranged_attack_power` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.ranged_attack_power, unitClass, level);
                     cls.ranged_attack_power = 1;
                 }
 
                 if (cls.health <= 0)
                 {
-                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `health` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.melee_damage, unitClass, level);
+                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `health` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.health, unitClass, level);
                     cls.health = 1;
                 }
 
                 if (cls.base_health <= 0)
                 {
-                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `base_health` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.melee_damage, unitClass, level);
+                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `base_health` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.base_health, unitClass, level);
                     cls.base_health = 1;
                 }
 
                 if (cls.mana < 0)
                 {
-                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `mana` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.melee_damage, unitClass, level);
+                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `mana` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.mana, unitClass, level);
                     cls.mana = abs(cls.mana);
                 }
 
                 if (cls.base_mana < 0)
                 {
-                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `base_mana` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.melee_damage, unitClass, level);
+                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `base_mana` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.base_mana, unitClass, level);
                     cls.base_mana = abs(cls.base_mana);
                 }
 
                 if (cls.strength <= 0)
                 {
-                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `strength` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.melee_damage, unitClass, level);
+                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `strength` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.strength, unitClass, level);
                     cls.strength = 1;
                 }
 
                 if (cls.agility <= 0)
                 {
-                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `agility` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.melee_damage, unitClass, level);
+                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `agility` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.agility, unitClass, level);
                     cls.agility = 1;
                 }
 
                 if (cls.stamina <= 0)
                 {
-                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `stamina` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.melee_damage, unitClass, level);
+                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `stamina` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.stamina, unitClass, level);
                     cls.stamina = 1;
                 }
 
                 if (cls.intellect <= 0)
                 {
-                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `intellect` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.melee_damage, unitClass, level);
+                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `intellect` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.intellect, unitClass, level);
                     cls.intellect = 1;
                 }
 
                 if (cls.spirit <= 0)
                 {
-                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `spirit` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.melee_damage, unitClass, level);
+                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `spirit` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.spirit, unitClass, level);
                     cls.spirit = 1;
                 }
 
                 if (cls.armor < 0)
                 {
-                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `armor` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.melee_damage, unitClass, level);
+                    sLog.Out(LOG_DBERROR, LOG_LVL_ERROR, "Invalid `armor` = %i in `creature_classlevelstats` for `class`=%u and `level`=%u!", cls.armor, unitClass, level);
                     cls.armor = abs(cls.armor);
                 }
 
