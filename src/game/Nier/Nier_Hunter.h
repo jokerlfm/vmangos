@@ -3,16 +3,6 @@
 
 #include "Nier_Base.h"
 
-enum HunterAspectType :uint32
-{
-    HunterAspectType_Hawk = 0,
-    HunterAspectType_Monkey,
-    HunterAspectType_Wild,
-    HunterAspectType_Pack,
-};
-
-class Nier_Base;
-
 class Nier_Hunter :public Nier_Base
 {
 public:

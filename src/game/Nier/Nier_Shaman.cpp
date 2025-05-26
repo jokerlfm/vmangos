@@ -2,7 +2,7 @@
 
 Nier_Shaman::Nier_Shaman()
 {
-    earthTotemType = ShamanEarthTotemType::ShamanEarthTotemType_StoneskinTotem;
+
 }
 
 bool Nier_Shaman::Attack(Unit* pTarget)
@@ -12,6 +12,10 @@ bool Nier_Shaman::Attack(Unit* pTarget)
         return false;
     }
 
+    if (me->IsNonMeleeSpellCasted(false, false, true))
+    {
+        return true;
+    }
     return true;
 }
 

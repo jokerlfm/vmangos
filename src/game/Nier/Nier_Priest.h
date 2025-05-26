@@ -3,8 +3,6 @@
 
 #include "Nier_Base.h"
 
-class Nier_Base;
-
 class Nier_Priest :public Nier_Base
 {
 public:

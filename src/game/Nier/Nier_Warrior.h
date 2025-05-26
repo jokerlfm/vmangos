@@ -1,13 +1,7 @@
 #ifndef NIER_WARRIOR_H
 #define NIER_WARRIOR_H
 
-#ifndef DEFAULT_WARRIOR_SPELL_DELAY
-#define DEFAULT_WARRIOR_SPELL_DELAY 20000
-#endif
-
 #include "Nier_Base.h"
-
-class Nier_Base;
 
 class Nier_Warrior :public Nier_Base
 {

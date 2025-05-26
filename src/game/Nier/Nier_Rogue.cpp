@@ -37,6 +37,10 @@ bool Nier_Rogue::Attack(Unit* pTarget)
         return false;
     }
 
+    if (me->IsNonMeleeSpellCasted(false, false, true))
+    {
+        return true;
+    }
     float targetDistance = me->GetDistance(pTarget);
     if (targetDistance > VISIBILITY_DISTANCE_NORMAL)
     {

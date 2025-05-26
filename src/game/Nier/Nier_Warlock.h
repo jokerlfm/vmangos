@@ -3,16 +3,6 @@
 
 #include "Nier_Base.h"
 
-enum WarlockCurseType :uint32
-{
-    WarlockCurseType_None = 0,
-    WarlockCurseType_Element = 1,
-    WarlockCurseType_Weakness = 2,
-    WarlockCurseType_Tongues = 3,
-};
-
-class Nier_Base;
-
 class Nier_Warlock :public Nier_Base
 {
 public:
@@ -26,25 +16,20 @@ public:
     bool InitializeCharacter(uint32 pTargetLevel);
     bool ResetTalentsAndSpells();
     void EquipRandomItem(uint32 pEquipSlot);
+    void Prepare();
 
-    uint32 curseType;
-    int curseDelay;
-    int manaCheckDelay;
-    int soulstoneDelay;
-    int soulLinkDelay;
-    int felArmorDelay;
-    int wardDelay;
-    int summonDelay;
-    int soulHarvestDelay;
-    int soulburnDelay;
-    int soulFireDelay;
-    int soulshatterDelay;
-    int shadowfuryDelay;
-    int conflagrateDelay;
-    int immolateDelay;
-    int shadowburnDelay;
-    int chaosBoltDelay;
-    int baneOfHavocDelay;
-    int empoweredImpDelay;
+    uint32 spell_Shoot;
+    uint32 spell_Immolate;
+    uint32 spell_ShadowBolt;
+    uint32 spell_SummonImp;
+    uint32 spell_Nightfall;
+    uint32 spell_Corruption;
+    uint32 spell_CurseOfWeakness;
+    uint32 spell_LifeTap;
+    uint32 spell_DrainLife;
+
+    uint32 spell_AmplifyCurse;
+    uint32 spell_DemonArmor;
+
 };
 #endif

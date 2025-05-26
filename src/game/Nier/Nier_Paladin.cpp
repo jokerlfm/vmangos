@@ -46,6 +46,10 @@ bool Nier_Paladin::Attack(Unit* pTarget)
         return false;
     }
 
+    if (me->IsNonMeleeSpellCasted(false, false, true))
+    {
+        return true;
+    }
     return true;
 }
 

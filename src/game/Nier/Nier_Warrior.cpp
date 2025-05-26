@@ -37,8 +37,8 @@ Nier_Warrior::Nier_Warrior()
     spell_Warbringer = 0;
     spell_Charge = 0;
 
-    spellDelay_DemoralizingShout = DEFAULT_WARRIOR_SPELL_DELAY;
-    spellDelay_BattleShout = DEFAULT_WARRIOR_SPELL_DELAY;
+    spellDelay_DemoralizingShout = 0;
+    spellDelay_BattleShout = 0;
     spellDelay_Revenge = 0;
 }
 
@@ -49,6 +49,10 @@ bool Nier_Warrior::Attack(Unit* pTarget)
         return false;
     }
 
+    if (me->IsNonMeleeSpellCasted(false, false, true))
+    {
+        return true;
+    }
     ChooseTarget(pTarget);
     me->Attack(pTarget, true);
     if (Chase(pTarget))
@@ -167,6 +171,10 @@ bool Nier_Warrior::Tank(Unit* pTarget)
         return false;
     }
 
+    if (me->IsNonMeleeSpellCasted(false, false, true))
+    {
+        return true;
+    }
     ChooseTarget(pTarget);
     me->Attack(pTarget, true);
     if (Chase(pTarget))

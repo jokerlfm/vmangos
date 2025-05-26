@@ -5,8 +5,6 @@ Nier_Hunter::Nier_Hunter()
 {
     specialty = 0;
 
-    aspectType = HunterAspectType::HunterAspectType_Hawk;
-
     spell_ArcaneShot = 0;
     spell_SerpentSting = 0;
     spell_RapidFire = 0;

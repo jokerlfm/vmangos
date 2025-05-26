@@ -45,6 +45,10 @@ bool Nier_Druid::Attack(Unit* pTarget)
         return false;
     }
 
+    if (me->IsNonMeleeSpellCasted(false, false, true))
+    {
+        return true;
+    }
     if (spell_BearForm > 0)
     {
         if (CastSpell(me, spell_BearForm, true))
@@ -115,6 +119,10 @@ bool Nier_Druid::Tank(Unit* pTarget)
         return false;
     }
 
+    if (me->IsNonMeleeSpellCasted(false, false, true))
+    {
+        return true;
+    }
     if (spell_BearForm > 0)
     {
         if (CastSpell(me, spell_BearForm, true))

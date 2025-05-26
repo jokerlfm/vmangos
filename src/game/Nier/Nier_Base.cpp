@@ -66,7 +66,7 @@ void Nier_Base::Prepare()
         {
             me->TeleportToHomebind(TeleportToOptions::TELE_TO_GM_MODE, false);
         }
-        followDistance = frand(1.0f, 10.0f);
+        followDistance = frand(ATTACK_DISTANCE, INSPECT_DISTANCE);
     }
 }
 
@@ -698,7 +698,7 @@ bool Nier_Base::UpdateMind()
                     if (Unit* leaderTarget = leader->GetSelectedUnit())
                     {
                         float ltDistance = me->GetDistance(leaderTarget);
-                        if (ltDistance < INTERACTION_DISTANCE)
+                        if (ltDistance < INSPECT_DISTANCE)
                         {
                             if (Tank(leaderTarget))
                             {
@@ -1127,9 +1127,9 @@ bool Nier_Base::Follow()
             else
             {
                 float destPosTargetDist = leader->GetDistance(actionTargetPos);
-                if (destPosTargetDist > followDistance + 1.0f)
+                if (destPosTargetDist > followDistance)
                 {
-                    leader->GetNearPoint(leader, actionTargetPos.x, actionTargetPos.y, actionTargetPos.z, 0.0f, followDistance - 1.0f, leader->GetAngle(me));
+                    leader->GetNearPoint(leader, actionTargetPos.x, actionTargetPos.y, actionTargetPos.z, 0.0f, followDistance - ATTACK_DISTANCE, leader->GetAngle(me));
                     MoveToPosition(actionTargetPos);
                 }
                 else
@@ -2031,7 +2031,7 @@ bool Nier_Base::Chase(Unit* pTarget, float pDistance)
             }
             if (!destPosInRange || !destPosInLos)
             {
-                float dynDistance = pDistance - 1.0f;
+                float dynDistance = pDistance - ATTACK_DISTANCE;
                 while (dynDistance > CONTACT_DISTANCE)
                 {
                     pTarget->GetNearPoint(pTarget, actionTargetPos.x, actionTargetPos.y, actionTargetPos.z, 0.0f, dynDistance, pTarget->GetAngle(me));

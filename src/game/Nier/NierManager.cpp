@@ -557,6 +557,8 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
                         nierClassSet.insert(Classes::CLASS_MAGE);
                         nierClassSet.insert(Classes::CLASS_ROGUE);
                         nierClassSet.insert(Classes::CLASS_PRIEST);
+                        nierClassSet.insert(Classes::CLASS_WARLOCK);
+                        nierClassSet.insert(Classes::CLASS_HUNTER);
 
                         for (std::unordered_set<uint32>::iterator classIT = nierClassSet.begin(); classIT != nierClassSet.end(); classIT++)
                         {

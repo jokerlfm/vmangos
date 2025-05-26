@@ -62,8 +62,8 @@ public:
     virtual bool InitializeCharacter(uint32 pTargetLevel);
     virtual bool ResetTalentsAndSpells();
     virtual void EquipRandomItem(uint32 pEquipSlot);
+    virtual void Prepare();
 
-    void Prepare();
     void Update(uint64 pTimeValue);
     bool UpdateAccount();
     bool UpdateAction();

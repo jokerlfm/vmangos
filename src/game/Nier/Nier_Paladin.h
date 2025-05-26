@@ -28,8 +28,6 @@ enum PaladinSealType :uint32
     PaladinSealType_Crusader = 2,
 };
 
-class Nier_Base;
-
 class Nier_Paladin :public Nier_Base
 {
 public:
