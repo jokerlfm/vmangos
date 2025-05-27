@@ -945,6 +945,27 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
             }
         }
     }
+    else if (commandName == "prepare")
+    {
+        if (chatTarget->nier)
+        {
+            if (chatTarget->IsInWorld())
+            {
+                if (chatTarget->IsAlive())
+                {
+                    chatTarget->nier->Prepare();
+                }
+                else
+                {
+                    replyStream << "dead";
+                }
+            }
+            else
+            {
+                replyStream << "not in world";
+            }
+        }
+    }
 
     std::string replayStr = replyStream.str();
     if (!replayStr.empty())

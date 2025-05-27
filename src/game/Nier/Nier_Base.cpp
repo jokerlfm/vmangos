@@ -351,7 +351,7 @@ bool Nier_Base::UpdateAccount()
     }
     case NierAccountState_Initialize:
     {
-        if (me->IsInWorld())
+        if (me && me->IsInWorld())
         {
             ObjectGuid masterGuid = ObjectGuid(HighGuid::HIGHGUID_PLAYER, master_character_id);
             if (Player* master = ObjectAccessor::FindPlayer(masterGuid))
@@ -388,7 +388,7 @@ bool Nier_Base::UpdateAccount()
     }
     case NierAccountState_Equip:
     {
-        if (me->IsInWorld())
+        if (me && me->IsInWorld())
         {
             for (uint32 equipSlot = EquipmentSlots::EQUIPMENT_SLOT_HEAD; equipSlot < EquipmentSlots::EQUIPMENT_SLOT_TABARD; equipSlot++)
             {
@@ -420,7 +420,7 @@ bool Nier_Base::UpdateAccount()
     }
     case NierAccountState_CheckLogout:
     {
-        if (me->IsInWorld())
+        if (me && me->IsInWorld())
         {
             replyStream << "still in world : " << account_id << " - " << character_id << " - " << me->GetName();
             checkDelay = urand(1 * IN_MILLISECONDS, 3 * IN_MILLISECONDS);
@@ -437,7 +437,7 @@ bool Nier_Base::UpdateAccount()
     }
     case NierAccountState_DoLogout:
     {
-        if (me->IsInWorld())
+        if (me && me->IsInWorld())
         {
             me->GetSession()->LogoutPlayer(true);
             replyStream << "nier logout : " << account_id << " - " << character_id << " - " << me->GetName();
@@ -464,6 +464,15 @@ bool Nier_Base::UpdateAccount()
 
 bool Nier_Base::UpdateAction()
 {
+    if (!me)
+    {
+        return false;
+    }
+    if (!me->IsInWorld())
+    {
+        return false;
+    }
+
     bool actionResult = true;
 
     switch (actionState)

@@ -31,5 +31,6 @@ public:
     uint32 spell_AmplifyCurse;
     uint32 spell_DemonArmor;
 
+    std::unordered_set<uint32> petSpellBooksItemIdSet;
 };
 #endif

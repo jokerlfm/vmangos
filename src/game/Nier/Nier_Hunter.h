@@ -16,6 +16,7 @@ public:
     bool InitializeCharacter(uint32 pTargetLevel);
     bool ResetTalentsAndSpells();
     void EquipRandomItem(uint32 pEquipSlot);
+    void Prepare();
 
     uint32 aspectType;
 
@@ -31,6 +32,8 @@ private:
     uint32 spell_RevivePet;
     uint32 spell_ConcussiveShot;
     uint32 spell_AutoShot;
+
+    uint32 spell_RaptorStrike;
 
     uint32 spell_TrueshotAura;
 

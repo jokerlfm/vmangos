@@ -14,6 +14,47 @@ Nier_Warlock::Nier_Warlock()
 
     spell_AmplifyCurse = 0;
     spell_DemonArmor = 0;
+
+    petSpellBooksItemIdSet.clear();
+    petSpellBooksItemIdSet.insert(16302);
+    petSpellBooksItemIdSet.insert(16316);
+    petSpellBooksItemIdSet.insert(16317);
+    petSpellBooksItemIdSet.insert(16318);
+    petSpellBooksItemIdSet.insert(16319);
+    petSpellBooksItemIdSet.insert(16320);
+    petSpellBooksItemIdSet.insert(16321);
+    petSpellBooksItemIdSet.insert(16322);
+    petSpellBooksItemIdSet.insert(16323);
+    petSpellBooksItemIdSet.insert(16324);
+    petSpellBooksItemIdSet.insert(16325);
+    petSpellBooksItemIdSet.insert(16326);
+    petSpellBooksItemIdSet.insert(16327);
+    petSpellBooksItemIdSet.insert(16328);
+    petSpellBooksItemIdSet.insert(16329);
+    petSpellBooksItemIdSet.insert(16330);
+    petSpellBooksItemIdSet.insert(16331);
+    petSpellBooksItemIdSet.insert(16346);
+    petSpellBooksItemIdSet.insert(16347);
+    petSpellBooksItemIdSet.insert(16348);
+    petSpellBooksItemIdSet.insert(16349);
+    petSpellBooksItemIdSet.insert(16350);
+    petSpellBooksItemIdSet.insert(16351);
+    petSpellBooksItemIdSet.insert(16352);
+    petSpellBooksItemIdSet.insert(16353);
+    petSpellBooksItemIdSet.insert(16354);
+    petSpellBooksItemIdSet.insert(16355);
+    petSpellBooksItemIdSet.insert(16356);
+    petSpellBooksItemIdSet.insert(16357);
+    petSpellBooksItemIdSet.insert(16358);
+    petSpellBooksItemIdSet.insert(16359);
+    petSpellBooksItemIdSet.insert(16360);
+    petSpellBooksItemIdSet.insert(16361);
+    petSpellBooksItemIdSet.insert(16362);
+    petSpellBooksItemIdSet.insert(16363);
+    petSpellBooksItemIdSet.insert(16364);
+    petSpellBooksItemIdSet.insert(16365);
+    petSpellBooksItemIdSet.insert(16366);
+
 }
 
 void Nier_Warlock::Prepare()
@@ -22,22 +63,28 @@ void Nier_Warlock::Prepare()
 
     if (me)
     {
-        std::unordered_set<uint32> petSpellBooksItemIdSet;
-        // todo : set demon books
-
+        uint32 meLevel = me->GetLevel();
         for (std::unordered_set<uint32>::iterator bookIT = petSpellBooksItemIdSet.begin(); bookIT != petSpellBooksItemIdSet.end(); bookIT++)
         {
             uint32 bookEntry = *bookIT;
-            if (!me->HasItemCount(bookEntry, 1))
+            if (ItemPrototype const* bookProto = sObjectMgr.GetItemPrototype(bookEntry))
             {
-                me->StoreNewItemInBestSlots(bookEntry, 20);
-            }
-            if (Item* pBook = GetItemInInventory(bookEntry))
-            {
-                UseItem(pBook, me);
-                std::ostringstream msgStream;
-                msgStream << "book learned : " << pBook->GetProto()->Name1;
-                me->Say(msgStream.str().c_str(), Language::LANG_UNIVERSAL);
+                if (bookProto->RequiredLevel > meLevel)
+                {
+                    continue;
+                }
+                // item spells casted at use
+                for (const _ItemSpell& spellData : bookProto->Spells)
+                {
+                    uint32 eachSpellId = spellData.SpellId;
+                    if (eachSpellId > 0)
+                    {
+                        me->CastSpell(me, eachSpellId, true);
+                        std::ostringstream msgStream;
+                        msgStream << "book learned : " << bookProto->Name1;
+                        me->Say(msgStream.str().c_str(), Language::LANG_UNIVERSAL);
+                    }
+                }
             }
         }
     }
