@@ -27,6 +27,7 @@ private:
     uint32 spell_HuntersMark;
     uint32 spell_Volley;
     uint32 spell_AspectOfTheHawk;
+    uint32 spell_TameBeast;
     uint32 spell_CallPet;
     uint32 spell_DismissPet;
     uint32 spell_RevivePet;
@@ -38,5 +39,7 @@ private:
     uint32 spell_TrueshotAura;
 
     uint32 ammoEntry;
+
+    uint32 petNumber;
 };
 #endif

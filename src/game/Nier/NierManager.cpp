@@ -966,6 +966,37 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
             }
         }
     }
+    else if (commandName == "abandon")
+    {
+        if (chatTarget->nier)
+        {
+            if (chatTarget->GetClass() == Classes::CLASS_HUNTER)
+            {
+                if (chatTarget->IsInWorld())
+                {
+                    if (chatTarget->IsAlive())
+                    {
+                        if (Pet* targetPet = chatTarget->GetPet())
+                        {
+                            if (targetPet->getPetType() == HUNTER_PET)
+                            {
+                                replyStream << "pet abandoned : " << targetPet->GetName();
+                                targetPet->Unsummon(PET_SAVE_AS_DELETED, chatTarget);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        replyStream << "dead";
+                    }
+                }
+                else
+                {
+                    replyStream << "not in world";
+                }
+            }
+        }
+    }
 
     std::string replayStr = replyStream.str();
     if (!replayStr.empty())

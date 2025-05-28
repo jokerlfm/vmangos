@@ -63,6 +63,22 @@ void Nier_Warlock::Prepare()
 
     if (me)
     {
+        if (Pet* mePet = me->GetPet())
+        {
+            //if (mePet->GetReactState() != ReactStates::REACT_DEFENSIVE)
+            //{
+            //    mePet->SetReactState(ReactStates::REACT_DEFENSIVE);
+            //}
+            //if (mePet->GetCharmInfo()->GetReactState() != ReactStates::REACT_DEFENSIVE)
+            //{
+            //    mePet->GetCharmInfo()->SetReactState(ReactStates::REACT_DEFENSIVE);
+            //}
+            for (PetSpellMap::iterator itr = mePet->m_petSpells.begin(); itr != mePet->m_petSpells.end(); itr++)
+            {
+                mePet->ToggleAutocast(itr->first, true);
+            }
+        }
+
         uint32 meLevel = me->GetLevel();
         for (std::unordered_set<uint32>::iterator bookIT = petSpellBooksItemIdSet.begin(); bookIT != petSpellBooksItemIdSet.end(); bookIT++)
         {
@@ -81,7 +97,7 @@ void Nier_Warlock::Prepare()
                     {
                         me->CastSpell(me, eachSpellId, true);
                         std::ostringstream msgStream;
-                        msgStream << "book learned : " << bookProto->Name1;
+                        msgStream << "books learned";
                         me->Say(msgStream.str().c_str(), Language::LANG_UNIVERSAL);
                     }
                 }
@@ -227,14 +243,14 @@ bool Nier_Warlock::Buff(Unit* pTarget)
 
         if (Pet* mePet = me->GetPet())
         {
-            if (mePet->GetReactState() != ReactStates::REACT_DEFENSIVE)
-            {
-                mePet->SetReactState(ReactStates::REACT_DEFENSIVE);
-            }
-            if (mePet->GetCharmInfo()->GetReactState() != ReactStates::REACT_DEFENSIVE)
-            {
-                mePet->GetCharmInfo()->SetReactState(ReactStates::REACT_DEFENSIVE);
-            }
+            //if (mePet->GetReactState() != ReactStates::REACT_DEFENSIVE)
+            //{
+            //    mePet->SetReactState(ReactStates::REACT_DEFENSIVE);
+            //}
+            //if (mePet->GetCharmInfo()->GetReactState() != ReactStates::REACT_DEFENSIVE)
+            //{
+            //    mePet->GetCharmInfo()->SetReactState(ReactStates::REACT_DEFENSIVE);
+            //}
             for (PetSpellMap::iterator itr = mePet->m_petSpells.begin(); itr != mePet->m_petSpells.end(); itr++)
             {
                 mePet->ToggleAutocast(itr->first, true);

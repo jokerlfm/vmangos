@@ -130,6 +130,5 @@ public:
 
     uint64 timeValue;
     int checkDelay;
-
 };
 #endif

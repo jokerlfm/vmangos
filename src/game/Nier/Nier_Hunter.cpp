@@ -12,6 +12,7 @@ Nier_Hunter::Nier_Hunter()
     spell_HuntersMark = 0;
     spell_Volley = 0;
     spell_AspectOfTheHawk = 0;
+    spell_TameBeast = 0;
     spell_CallPet = 0;
     spell_DismissPet = 0;
     spell_RevivePet = 0;
@@ -23,6 +24,8 @@ Nier_Hunter::Nier_Hunter()
     spell_TrueshotAura = 0;
 
     ammoEntry = 0;
+
+    petNumber = 0;
 }
 
 void Nier_Hunter::Prepare()
@@ -38,6 +41,87 @@ void Nier_Hunter::Prepare()
         me->SetAmmo(ammoEntry);
 
         followDistance = frand(15.0f, 35.0f);
+
+        if (spell_CallPet > 0)
+        {
+            if (Pet* mePet = me->GetPet())
+            {
+                if (!mePet->IsAlive())
+                {
+                    if (CastSpell(me, spell_RevivePet))
+                    {
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                Pet* dbPet = new Pet;
+                if (dbPet->LoadPetFromDB(me, 0))
+                {
+                    petNumber = dbPet->GetCharmInfo()->GetPetNumber();
+                    if (CastSpell(me, spell_CallPet))
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    delete dbPet;
+
+                    std::unique_ptr<QueryResult> creatureQR = WorldDatabase.Query("SELECT entry FROM creature_template where type = 1 and pet_family > 0 order by rand() limit 5");
+                    if (creatureQR)
+                    {
+                        Field* fields = creatureQR->Fetch();
+                        uint32 cEntry = fields[0].GetUInt32();
+
+                        if (const CreatureInfo* ci = sObjectMgr.GetCreatureTemplate(cEntry))
+                        {
+                            Pet* newPet = new Pet(HUNTER_PET);
+                            if (newPet->CreateBaseAtCreatureInfo(ci, me->GetMap(), me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation()))
+                            {
+                                newPet->SetOwnerGuid(me->GetObjectGuid());
+                                newPet->SetCreatorGuid(me->GetObjectGuid());
+                                newPet->SetFactionTemplateId(me->GetFactionTemplateId());
+                                newPet->SetUInt32Value(UNIT_CREATED_BY_SPELL, spell_TameBeast);
+                                if (newPet->InitStatsForLevel(me->GetLevel()))
+                                {
+                                    newPet->GetCharmInfo()->SetPetNumber(newPet->GetObjectGuid().GetEntry(), true);
+                                    newPet->GetCharmInfo()->SetReactState(REACT_DEFENSIVE);
+                                    newPet->InitializeDefaultName();
+                                    newPet->AIM_Initialize();
+                                    newPet->InitPetCreateSpells();
+                                    newPet->SetHealth(newPet->GetMaxHealth());
+                                    newPet->SetUInt32Value(UNIT_FIELD_LEVEL, me->GetLevel() - 1);
+                                    newPet->SetLoyaltyLevel(LoyaltyLevel::BEST_FRIEND);
+                                    newPet->SetPvP(true);
+                                    newPet->GetMap()->Add((Creature*)newPet);
+                                    newPet->SetUInt32Value(UNIT_FIELD_LEVEL, me->GetLevel());
+                                    me->SetPet(newPet);
+                                    newPet->SavePetToDB(PET_SAVE_AS_CURRENT);
+                                    petNumber = newPet->GetCharmInfo()->GetPetNumber();
+                                    me->PetSpellInitialize();
+                                    me->SaveToDB();
+
+                                    if (CastSpell(me, spell_DismissPet))
+                                    {
+                                        return;
+                                    }
+                                }
+                                else
+                                {
+                                    delete newPet;
+                                }
+                            }
+                            else
+                            {
+                                delete newPet;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -203,6 +287,37 @@ bool Nier_Hunter::Buff(Unit* pTarget)
                 return true;
             }
         }
+
+        if (spell_CallPet > 0)
+        {
+            if (Pet* mePet = me->GetPet())
+            {
+                if (!mePet->IsAlive())
+                {
+                    if (CastSpell(me, spell_RevivePet))
+                    {
+                        return true;
+                    }
+                }
+                mePet->SetPower(Powers::POWER_HAPPINESS, HAPPINESS_LEVEL_SIZE * 2);
+            }
+            else
+            {
+                Pet* dbPet = new Pet;
+                if (dbPet->LoadPetFromDB(me, 0))
+                //if (dbPet->LoadPetFromDB(me, 0, petNumber))
+                {
+                    if (CastSpell(me, spell_CallPet))
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    delete dbPet;
+                }
+            }
+        }
     }
 
     return false;
@@ -265,6 +380,7 @@ bool Nier_Hunter::InitializeCharacter(uint32 pTargetLevel)
         spell_AspectOfTheHawk = 13165;
         me->CastSpell(me, 23356, false);
         me->CastSpell(me, 23357, false);
+        spell_TameBeast = 1515;
         spell_CallPet = 883;
         spell_DismissPet = 2641;
         spell_RevivePet = 982;

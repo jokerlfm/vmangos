@@ -661,6 +661,10 @@ bool Nier_Base::UpdateMind()
     {
         return true;
     }
+    if (me->IsNonMeleeSpellCasted(false, false, true))
+    {
+        return true;
+    }
     if (Group* meGroup = me->GetGroup())
     {
         // grouping
@@ -1046,6 +1050,10 @@ bool Nier_Base::Attack(Unit* pTarget)
     {
         return false;
     }
+    if (me->IsNonMeleeSpellCasted(false, false, true))
+    {
+        return true;
+    }
 
     return true;
 }
@@ -1094,7 +1102,10 @@ bool Nier_Base::Heal(Unit* pTarget)
     {
         return false;
     }
-
+    if (me->IsNonMeleeSpellCasted(false, false, true))
+    {
+        return true;
+    }
     return true;
 }
 
