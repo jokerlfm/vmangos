@@ -237,7 +237,7 @@ void NierManager::DeleteNiers()
     }
 }
 
-bool NierManager::CreateNier(uint32 pMasterCharacterId, uint32 pClass, uint32 pRace)
+bool NierManager::CreateNier(uint32 pMasterCharacterId, uint32 pClass, uint32 pType)
 {
     ObjectGuid masterGuid = ObjectGuid(HighGuid::HIGHGUID_PLAYER, pMasterCharacterId);
     if (Player* master = ObjectAccessor::FindPlayer(masterGuid))
@@ -247,15 +247,31 @@ bool NierManager::CreateNier(uint32 pMasterCharacterId, uint32 pClass, uint32 pR
             if (master->GetLevel() >= 10)
             {
                 uint32 targetRace = 0;
-                if (master->GetTeamId() == TeamId::TEAM_ALLIANCE)
+                if (pType == 0)
                 {
-                    uint32 raceIndex = urand(0, allianceRaces[pClass].size() - 1);
-                    targetRace = allianceRaces[pClass][raceIndex];
+                    if (master->GetTeamId() == TeamId::TEAM_ALLIANCE)
+                    {
+                        uint32 raceIndex = urand(0, allianceRaces[pClass].size() - 1);
+                        targetRace = allianceRaces[pClass][raceIndex];
+                    }
+                    else
+                    {
+                        uint32 raceIndex = urand(0, hordeRaces[pClass].size() - 1);
+                        targetRace = hordeRaces[pClass][raceIndex];
+                    }
                 }
                 else
                 {
-                    uint32 raceIndex = urand(0, hordeRaces[pClass].size() - 1);
-                    targetRace = allianceRaces[pClass][raceIndex];
+                    if (master->GetTeamId() == TeamId::TEAM_ALLIANCE)
+                    {
+                        uint32 raceIndex = urand(0, hordeRaces[pClass].size() - 1);
+                        targetRace = hordeRaces[pClass][raceIndex];
+                    }
+                    else
+                    {
+                        uint32 raceIndex = urand(0, allianceRaces[pClass].size() - 1);
+                        targetRace = allianceRaces[pClass][raceIndex];
+                    }
                 }
 
                 uint32 maxId = 0;
@@ -544,25 +560,57 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
                 }
                 else
                 {
+                    bool createFellow = true;
+                    bool createRival = true;
                     if (commandVector.size() > 2)
                     {
-                        uint32 targetClass = atoi(commandVector.at(2).c_str());
-                        CreateNier(pCommander->GetGUIDLow(), targetClass, Races::RACE_HUMAN);
-                    }
-                    else
-                    {
-                        std::unordered_set<uint32> nierClassSet;
-                        nierClassSet.insert(Classes::CLASS_DRUID);
-                        //nierClassSet.insert(Classes::CLASS_WARRIOR);
-                        nierClassSet.insert(Classes::CLASS_MAGE);
-                        nierClassSet.insert(Classes::CLASS_ROGUE);
-                        nierClassSet.insert(Classes::CLASS_PRIEST);
-                        nierClassSet.insert(Classes::CLASS_WARLOCK);
-                        nierClassSet.insert(Classes::CLASS_HUNTER);
-
-                        for (std::unordered_set<uint32>::iterator classIT = nierClassSet.begin(); classIT != nierClassSet.end(); classIT++)
+                        std::string createType = commandVector.at(2);
+                        if (createType == "fellow")
                         {
-                            CreateNier(pCommander->GetGUIDLow(), *classIT, Races::RACE_HUMAN);
+                            createRival = false;
+                        }
+                        else if (createType == "rival")
+                        {
+                            createFellow = false;
+                        }
+                        else
+                        {
+                            createRival = false;
+                            createFellow = false;
+                            replyStream << "create type is not valid";
+                        }
+                    }
+
+                    if (createFellow)
+                    {
+                        std::unordered_set<uint32> nierClassSet_fellow;
+                        nierClassSet_fellow.insert(Classes::CLASS_DRUID);
+                        //nierClassSet.insert(Classes::CLASS_WARRIOR);
+                        nierClassSet_fellow.insert(Classes::CLASS_MAGE);
+                        nierClassSet_fellow.insert(Classes::CLASS_ROGUE);
+                        nierClassSet_fellow.insert(Classes::CLASS_PRIEST);
+                        nierClassSet_fellow.insert(Classes::CLASS_WARLOCK);
+                        nierClassSet_fellow.insert(Classes::CLASS_HUNTER);
+
+                        for (std::unordered_set<uint32>::iterator classIT = nierClassSet_fellow.begin(); classIT != nierClassSet_fellow.end(); classIT++)
+                        {
+                            CreateNier(pCommander->GetGUIDLow(), *classIT);
+                        }
+                    }
+                    if (createRival)
+                    {
+                        std::unordered_set<uint32> nierClassSet_rival;
+                        nierClassSet_rival.insert(Classes::CLASS_DRUID);
+                        //nierClassSet.insert(Classes::CLASS_WARRIOR);
+                        nierClassSet_rival.insert(Classes::CLASS_MAGE);
+                        nierClassSet_rival.insert(Classes::CLASS_ROGUE);
+                        //nierClassSet_rival.insert(Classes::CLASS_PRIEST);
+                        nierClassSet_rival.insert(Classes::CLASS_WARLOCK);
+                        nierClassSet_rival.insert(Classes::CLASS_HUNTER);
+
+                        for (std::unordered_set<uint32>::iterator classIT = nierClassSet_rival.begin(); classIT != nierClassSet_rival.end(); classIT++)
+                        {
+                            CreateNier(pCommander->GetGUIDLow(), *classIT, 1);
                         }
                     }
                 }
@@ -993,6 +1041,20 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
                 else
                 {
                     replyStream << "not in world";
+                }
+            }
+        }
+    }
+    else if (commandName == "reset")
+    {
+        if (commandVector.size() > 1)
+        {
+            std::string targetName = commandVector.at(1);
+            if (Player* targetPlayer = ObjectAccessor::FindPlayerByName(targetName.c_str()))
+            {
+                if (targetPlayer->nier)
+                {
+                    targetPlayer->nier->resetDelay = 5;
                 }
             }
         }

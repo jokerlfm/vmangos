@@ -23,7 +23,14 @@ public:
     void Update(uint32 pDiff);
     void LogoutNiers(bool pmInstant = false);
     void DeleteNiers();
-    bool CreateNier(uint32 pMasterId, uint32 pClass, uint32 pRace);
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="pMasterId"></param>
+    /// <param name="pClass"></param>
+    /// <param name="pType">0 fellow, 1 rival</param>
+    /// <returns></returns>
+    bool CreateNier(uint32 pMasterId, uint32 pClass, uint32 pType = 0);
     bool LoginNiers(uint32 pMasterId);
 
     Nier_Base* GetNier(uint32 pNierId);

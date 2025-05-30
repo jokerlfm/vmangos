@@ -102,6 +102,10 @@ public:
     Player* GetNearbyHostilePlayer();
     Unit* GetNearbyHostileUnit();
 
+    bool IsOnline();
+    bool IsInWorld();
+    bool Logout();
+
     bool creating;
 
     Player* me;
@@ -130,5 +134,6 @@ public:
 
     uint64 timeValue;
     int checkDelay;
+    int resetDelay;
 };
 #endif

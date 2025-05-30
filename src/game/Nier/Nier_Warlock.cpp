@@ -90,17 +90,19 @@ void Nier_Warlock::Prepare()
                     continue;
                 }
                 // item spells casted at use
+                uint32 validBooksNumber = 0;
                 for (const _ItemSpell& spellData : bookProto->Spells)
                 {
                     uint32 eachSpellId = spellData.SpellId;
                     if (eachSpellId > 0)
                     {
                         me->CastSpell(me, eachSpellId, true);
-                        std::ostringstream msgStream;
-                        msgStream << "books learned";
-                        me->Say(msgStream.str().c_str(), Language::LANG_UNIVERSAL);
+                        validBooksNumber++;
                     }
                 }
+                std::ostringstream msgStream;
+                msgStream << "books learned : " << validBooksNumber;
+                me->Say(msgStream.str().c_str(), Language::LANG_UNIVERSAL);
             }
         }
     }

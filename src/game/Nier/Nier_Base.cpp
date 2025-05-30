@@ -40,6 +40,7 @@ Nier_Base::Nier_Base()
 
     timeValue = 0;
     checkDelay = 0;
+    resetDelay = 0;
 }
 
 void Nier_Base::ClearAction()
@@ -75,6 +76,7 @@ void Nier_Base::Update(uint64 pTimeValue)
     uint64 elapsed = pTimeValue - timeValue;
     timeValue = pTimeValue;
     checkDelay -= elapsed;
+    resetDelay -= elapsed;
     actionDuration += elapsed;
     if (checkDelay > 0)
     {
@@ -351,7 +353,7 @@ bool Nier_Base::UpdateAccount()
     }
     case NierAccountState_Initialize:
     {
-        if (me && me->IsInWorld())
+        if (IsInWorld())
         {
             ObjectGuid masterGuid = ObjectGuid(HighGuid::HIGHGUID_PLAYER, master_character_id);
             if (Player* master = ObjectAccessor::FindPlayer(masterGuid))
@@ -388,7 +390,7 @@ bool Nier_Base::UpdateAccount()
     }
     case NierAccountState_Equip:
     {
-        if (me && me->IsInWorld())
+        if (IsInWorld())
         {
             for (uint32 equipSlot = EquipmentSlots::EQUIPMENT_SLOT_HEAD; equipSlot < EquipmentSlots::EQUIPMENT_SLOT_TABARD; equipSlot++)
             {
@@ -403,6 +405,7 @@ bool Nier_Base::UpdateAccount()
             else
             {
                 Prepare();
+                resetDelay = urand(30 * IN_MILLISECONDS, 60 * IN_MILLISECONDS);
                 accountState = NierAccountState::NierAccountState_Online;
             }
             checkDelay = urand(1 * IN_MILLISECONDS, 3 * IN_MILLISECONDS);
@@ -420,9 +423,10 @@ bool Nier_Base::UpdateAccount()
     }
     case NierAccountState_CheckLogout:
     {
-        if (me && me->IsInWorld())
+        if (IsOnline())
         {
-            replyStream << "still in world : " << account_id << " - " << character_id << " - " << me->GetName();
+            replyStream << "still in world : " << account_id << " - " << character_id;
+            accountState = NierAccountState::NierAccountState_DoLogout;
             checkDelay = urand(1 * IN_MILLISECONDS, 3 * IN_MILLISECONDS);
         }
         else
@@ -437,12 +441,11 @@ bool Nier_Base::UpdateAccount()
     }
     case NierAccountState_DoLogout:
     {
-        if (me && me->IsInWorld())
+        if (Logout())
         {
-            me->GetSession()->LogoutPlayer(true);
-            replyStream << "nier logout : " << account_id << " - " << character_id << " - " << me->GetName();
+            replyStream << "nier logout : " << account_id << " - " << character_id;
             accountState = NierAccountState::NierAccountState_CheckLogout;
-            checkDelay = urand(1 * IN_MILLISECONDS, 3 * IN_MILLISECONDS);
+            checkDelay = urand(5 * IN_MILLISECONDS, 10 * IN_MILLISECONDS);
         }
         else
         {
@@ -464,11 +467,7 @@ bool Nier_Base::UpdateAccount()
 
 bool Nier_Base::UpdateAction()
 {
-    if (!me)
-    {
-        return false;
-    }
-    if (!me->IsInWorld())
+    if (!IsInWorld())
     {
         return false;
     }
@@ -484,10 +483,20 @@ bool Nier_Base::UpdateAction()
     }
     case NierActionState_Idle:
     {
+        if (me->IsInCombat())
+        {
+            ClearAction();
+            actionResult = false;
+        }
         break;
     }
     case NierActionState_Wander:
     {
+        if (me->IsInCombat())
+        {
+            ClearAction();
+            actionResult = false;
+        }
         break;
     }
     case NierActionState_Follow:
@@ -645,28 +654,24 @@ bool Nier_Base::UpdateAction()
 
 bool Nier_Base::UpdateMind()
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
-    }
-    if (!me->IsInWorld())
-    {
-        return false;
-    }
-    if (!me->IsAlive())
-    {
-        return false;
-    }
-    if (!me->CanFreeMove())
-    {
-        return true;
-    }
-    if (me->IsNonMeleeSpellCasted(false, false, true))
-    {
-        return true;
     }
     if (Group* meGroup = me->GetGroup())
     {
+        if (!me->IsAlive())
+        {
+            return false;
+        }
+        if (!me->CanFreeMove())
+        {
+            return true;
+        }
+        if (me->IsNonMeleeSpellCasted(false, false, true))
+        {
+            return true;
+        }
         // grouping
         switch (me->nierGroupRole)
         {
@@ -901,38 +906,86 @@ bool Nier_Base::UpdateMind()
         }
         else
         {
-            if (Rest())
+            if (resetDelay > 0)
             {
-                return true;
-            }
-            uint32 actionRate = urand(0, 100);
-            if (actionRate < 50)
-            {
-                if (Wander())
+                if (!me->IsAlive())
+                {
+                    return false;
+                }
+                if (!me->CanFreeMove())
                 {
                     return true;
                 }
-            }
-            else if (actionRate < 70)
-            {
-                if (PVE())
+                if (me->IsNonMeleeSpellCasted(false, false, true))
                 {
                     return true;
                 }
-            }
-            else if (actionRate < 90)
-            {
-                if (PVP())
+                if (Rest())
                 {
                     return true;
+                }
+                uint32 actionRate = urand(0, 100);
+                if (actionRate < 50)
+                {
+                    if (Wander())
+                    {
+                        return true;
+                    }
+                }
+                else if (actionRate < 70)
+                {
+                    if (PVE())
+                    {
+                        return true;
+                    }
+                }
+                else if (actionRate < 90)
+                {
+                    if (PVP())
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (Idle())
+                    {
+                        return true;
+                    }
                 }
             }
             else
             {
-                if (Idle())
+                ObjectGuid masterGuid = ObjectGuid(HighGuid::HIGHGUID_PLAYER, master_character_id);
+                if (Player* master = ObjectAccessor::FindPlayer(masterGuid))
                 {
-                    return true;
+                    if (master->IsInWorld())
+                    {
+                        float nearDistance = frand(VISIBILITY_DISTANCE_NORMAL, VISIBILITY_DISTANCE_LARGE);
+                        float nearAngle = frand(0, M_PI_F * 2);
+                        float nearX = master->GetPositionX();
+                        float nearY = master->GetPositionY();
+                        float nearZ = master->GetPositionZ();
+                        master->GetNearPoint(master, nearX, nearY, nearZ, master->GetObjectBoundingRadius(), nearDistance, nearAngle);
+                        Teleport(master->GetMapId(), nearX, nearY, nearZ);
+
+                        if (me->IsAlive())
+                        {
+                            actionState = NierActionState::NierActionState_Teleport;
+                            actionDuration = 0;
+                            actionTimeLimit = urand(1000, 2000);
+                            actionTargetSpell = 0;
+                        }
+                        else
+                        {
+                            actionState = NierActionState::NierActionState_Corpse;
+                            actionDuration = 0;
+                            actionTimeLimit = urand(1000, 3000);
+                            actionTargetSpell = 0;
+                        }
+                    }
                 }
+                resetDelay = urand(10 * MINUTE * IN_MILLISECONDS, 20 * MINUTE * IN_MILLISECONDS);
             }
         }
     }
@@ -942,7 +995,7 @@ bool Nier_Base::UpdateMind()
 
 bool Nier_Base::Rest(bool pForce)
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1034,7 +1087,7 @@ bool Nier_Base::Idle()
 
 bool Nier_Base::Attack(Unit* pTarget)
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1060,7 +1113,7 @@ bool Nier_Base::Attack(Unit* pTarget)
 
 bool Nier_Base::Tank(Unit* pTarget)
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1086,7 +1139,7 @@ bool Nier_Base::Tank(Unit* pTarget)
 
 bool Nier_Base::Heal(Unit* pTarget)
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1111,7 +1164,7 @@ bool Nier_Base::Heal(Unit* pTarget)
 
 bool Nier_Base::Follow()
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1174,7 +1227,7 @@ bool Nier_Base::Follow()
 
 bool Nier_Base::Cure(Unit* pTarget)
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1196,7 +1249,7 @@ bool Nier_Base::Cure(Unit* pTarget)
 
 bool Nier_Base::Buff(Unit* pTarget)
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1218,7 +1271,7 @@ bool Nier_Base::Buff(Unit* pTarget)
 
 bool Nier_Base::Revive(Unit* pTarget)
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1244,7 +1297,7 @@ bool Nier_Base::Revive(Unit* pTarget)
 
 bool Nier_Base::InitializeCharacter(uint32 pTargetLevel)
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1254,7 +1307,7 @@ bool Nier_Base::InitializeCharacter(uint32 pTargetLevel)
 
 bool Nier_Base::ResetTalentsAndSpells()
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1265,7 +1318,7 @@ bool Nier_Base::ResetTalentsAndSpells()
 
 void Nier_Base::RemoveEquipments()
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return;
     }
@@ -1287,7 +1340,7 @@ void Nier_Base::RemoveEquipments()
 
 void Nier_Base::LearnTalent(uint32 pTalentId, uint32 pMaxRank)
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return;
     }
@@ -1435,7 +1488,7 @@ void Nier_Base::PetStop()
 
 bool Nier_Base::UseItem(Item* pItem, Unit* pTarget)
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1474,7 +1527,7 @@ bool Nier_Base::UseItem(Item* pItem, Unit* pTarget)
 
 bool Nier_Base::UseItem(Item* pItem, Item* pTarget)
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1508,7 +1561,7 @@ bool Nier_Base::CastSpell(Unit* pTarget, uint32 pSpellId, bool pCheckAura, bool 
     {
         return false;
     }
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1591,7 +1644,7 @@ void Nier_Base::CancelAura(uint32 pmSpellID)
     {
         return;
     }
-    if (!me)
+    if (!IsInWorld())
     {
         return;
     }
@@ -1720,7 +1773,7 @@ bool Nier_Base::Drink()
 
 bool Nier_Base::HealthPotion()
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1782,7 +1835,7 @@ bool Nier_Base::HealthPotion()
 
 bool Nier_Base::ManaPotion()
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1875,7 +1928,7 @@ bool Nier_Base::SpellValid(uint32 pSpellID)
     {
         return false;
     }
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -1889,7 +1942,7 @@ bool Nier_Base::SpellValid(uint32 pSpellID)
 
 Item* Nier_Base::GetItemInInventory(uint32 pmEntry)
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return NULL;
     }
@@ -2095,7 +2148,7 @@ bool Nier_Base::Chase(Unit* pTarget, float pDistance)
 
 bool Nier_Base::Teleport(uint32 pMapId, float pX, float pY, float pZ, float pO)
 {
-    if (!me)
+    if (!IsInWorld())
     {
         return false;
     }
@@ -2136,4 +2189,45 @@ void Nier_Base::EquipOne(uint32 pEquipSlot, uint32 pItemClass, uint32 pItemSubcl
     }
     msgStream << me->GetName() << " No usable equip " << pEquipSlot << " - " << pMinReqLevel << " - " << pMaxReqLevel;
     sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, msgStream.str().c_str());
+}
+
+bool Nier_Base::IsOnline()
+{
+    if (me)
+    {
+        if (me->IsInWorld())
+        {
+            return true;
+        }
+    }
+    if (WorldSession* ws = me->GetSession())
+    {
+        return true;
+    }
+
+    return false;
+}
+
+
+bool Nier_Base::IsInWorld()
+{
+    if (me)
+    {
+        if (me->IsInWorld())
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Nier_Base::Logout()
+{
+    if (WorldSession* ws = me->GetSession())
+    {
+        ws->LogoutPlayer(true);
+        return true;
+    }
+    return false;
 }
