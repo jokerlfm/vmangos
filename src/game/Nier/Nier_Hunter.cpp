@@ -28,95 +28,95 @@ Nier_Hunter::Nier_Hunter()
     petNumber = 0;
 }
 
-void Nier_Hunter::Prepare()
+bool Nier_Hunter::Prepare()
 {
-    Nier_Base::Prepare();
-
-    if (me)
+    if (!Nier_Base::Prepare())
     {
-        if (!me->HasItemCount(ammoEntry, 1000))
-        {
-            me->StoreNewItemInBestSlots(ammoEntry, 1000);
-        }
-        me->SetAmmo(ammoEntry);
+        return false;
+    }
 
-        followDistance = frand(15.0f, 35.0f);
+    if (!me->HasItemCount(ammoEntry, 1000))
+    {
+        me->StoreNewItemInBestSlots(ammoEntry, 1000);
+    }
+    me->SetAmmo(ammoEntry);
 
-        if (spell_CallPet > 0)
+    followDistance = frand(15.0f, 35.0f);
+
+    if (spell_CallPet > 0)
+    {
+        if (Pet* mePet = me->GetPet())
         {
-            if (Pet* mePet = me->GetPet())
+            if (!mePet->IsAlive())
             {
-                if (!mePet->IsAlive())
+                if (CastSpell(me, spell_RevivePet))
                 {
-                    if (CastSpell(me, spell_RevivePet))
-                    {
-                        return;
-                    }
+                    return true;
+                }
+            }
+        }
+        else
+        {
+            Pet* dbPet = new Pet;
+            if (dbPet->LoadPetFromDB(me, 0))
+            {
+                petNumber = dbPet->GetCharmInfo()->GetPetNumber();
+                if (CastSpell(me, spell_CallPet))
+                {
+                    return true;
                 }
             }
             else
             {
-                Pet* dbPet = new Pet;
-                if (dbPet->LoadPetFromDB(me, 0))
-                {
-                    petNumber = dbPet->GetCharmInfo()->GetPetNumber();
-                    if (CastSpell(me, spell_CallPet))
-                    {
-                        return;
-                    }
-                }
-                else
-                {
-                    delete dbPet;
+                delete dbPet;
 
-                    std::unique_ptr<QueryResult> creatureQR = WorldDatabase.Query("SELECT entry FROM creature_template where type = 1 and pet_family > 0 order by rand() limit 5");
-                    if (creatureQR)
-                    {
-                        Field* fields = creatureQR->Fetch();
-                        uint32 cEntry = fields[0].GetUInt32();
+                std::unique_ptr<QueryResult> creatureQR = WorldDatabase.Query("SELECT entry FROM creature_template where type = 1 and pet_family > 0 order by rand() limit 5");
+                if (creatureQR)
+                {
+                    Field* fields = creatureQR->Fetch();
+                    uint32 cEntry = fields[0].GetUInt32();
 
-                        if (const CreatureInfo* ci = sObjectMgr.GetCreatureTemplate(cEntry))
+                    if (const CreatureInfo* ci = sObjectMgr.GetCreatureTemplate(cEntry))
+                    {
+                        Pet* newPet = new Pet(HUNTER_PET);
+                        if (newPet->CreateBaseAtCreatureInfo(ci, me->GetMap(), me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation()))
                         {
-                            Pet* newPet = new Pet(HUNTER_PET);
-                            if (newPet->CreateBaseAtCreatureInfo(ci, me->GetMap(), me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation()))
+                            newPet->SetOwnerGuid(me->GetObjectGuid());
+                            newPet->SetCreatorGuid(me->GetObjectGuid());
+                            newPet->SetFactionTemplateId(me->GetFactionTemplateId());
+                            newPet->SetUInt32Value(UNIT_CREATED_BY_SPELL, spell_TameBeast);
+                            if (newPet->InitStatsForLevel(me->GetLevel()))
                             {
-                                newPet->SetOwnerGuid(me->GetObjectGuid());
-                                newPet->SetCreatorGuid(me->GetObjectGuid());
-                                newPet->SetFactionTemplateId(me->GetFactionTemplateId());
-                                newPet->SetUInt32Value(UNIT_CREATED_BY_SPELL, spell_TameBeast);
-                                if (newPet->InitStatsForLevel(me->GetLevel()))
-                                {
-                                    newPet->GetCharmInfo()->SetPetNumber(newPet->GetObjectGuid().GetEntry(), true);
-                                    newPet->GetCharmInfo()->SetReactState(REACT_DEFENSIVE);
-                                    newPet->InitializeDefaultName();
-                                    newPet->AIM_Initialize();
-                                    newPet->InitPetCreateSpells();
-                                    newPet->SetHealth(newPet->GetMaxHealth());
-                                    newPet->SetUInt32Value(UNIT_FIELD_LEVEL, me->GetLevel() - 1);
-                                    newPet->SetLoyaltyLevel(LoyaltyLevel::BEST_FRIEND);
-                                    newPet->SetPvP(true);
-                                    newPet->GetMap()->Add((Creature*)newPet);
-                                    newPet->SetUInt32Value(UNIT_FIELD_LEVEL, me->GetLevel());
-                                    me->SetPet(newPet);
-                                    newPet->SavePetToDB(PET_SAVE_AS_CURRENT);
-                                    petNumber = newPet->GetCharmInfo()->GetPetNumber();
-                                    me->PetSpellInitialize();
-                                    me->SaveToDB();
+                                newPet->GetCharmInfo()->SetPetNumber(newPet->GetObjectGuid().GetEntry(), true);
+                                newPet->GetCharmInfo()->SetReactState(REACT_DEFENSIVE);
+                                newPet->InitializeDefaultName();
+                                newPet->AIM_Initialize();
+                                newPet->InitPetCreateSpells();
+                                newPet->SetHealth(newPet->GetMaxHealth());
+                                newPet->SetUInt32Value(UNIT_FIELD_LEVEL, me->GetLevel() - 1);
+                                newPet->SetLoyaltyLevel(LoyaltyLevel::BEST_FRIEND);
+                                newPet->SetPvP(true);
+                                newPet->GetMap()->Add((Creature*)newPet);
+                                newPet->SetUInt32Value(UNIT_FIELD_LEVEL, me->GetLevel());
+                                me->SetPet(newPet);
+                                newPet->SavePetToDB(PET_SAVE_AS_CURRENT);
+                                petNumber = newPet->GetCharmInfo()->GetPetNumber();
+                                me->PetSpellInitialize();
+                                me->SaveToDB();
 
-                                    if (CastSpell(me, spell_DismissPet))
-                                    {
-                                        return;
-                                    }
-                                }
-                                else
+                                if (CastSpell(me, spell_DismissPet))
                                 {
-                                    delete newPet;
+                                    return true;
                                 }
                             }
                             else
                             {
                                 delete newPet;
                             }
+                        }
+                        else
+                        {
+                            delete newPet;
                         }
                     }
                 }

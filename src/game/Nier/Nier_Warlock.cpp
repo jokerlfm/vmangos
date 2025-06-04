@@ -57,53 +57,53 @@ Nier_Warlock::Nier_Warlock()
 
 }
 
-void Nier_Warlock::Prepare()
+bool Nier_Warlock::Prepare()
 {
-    Nier_Base::Prepare();
-
-    if (me)
+    if (!Nier_Base::Prepare())
     {
-        if (Pet* mePet = me->GetPet())
-        {
-            //if (mePet->GetReactState() != ReactStates::REACT_DEFENSIVE)
-            //{
-            //    mePet->SetReactState(ReactStates::REACT_DEFENSIVE);
-            //}
-            //if (mePet->GetCharmInfo()->GetReactState() != ReactStates::REACT_DEFENSIVE)
-            //{
-            //    mePet->GetCharmInfo()->SetReactState(ReactStates::REACT_DEFENSIVE);
-            //}
-            for (PetSpellMap::iterator itr = mePet->m_petSpells.begin(); itr != mePet->m_petSpells.end(); itr++)
-            {
-                mePet->ToggleAutocast(itr->first, true);
-            }
-        }
+        return false;
+    }
 
-        uint32 meLevel = me->GetLevel();
-        for (std::unordered_set<uint32>::iterator bookIT = petSpellBooksItemIdSet.begin(); bookIT != petSpellBooksItemIdSet.end(); bookIT++)
+    if (Pet* mePet = me->GetPet())
+    {
+        //if (mePet->GetReactState() != ReactStates::REACT_DEFENSIVE)
+        //{
+        //    mePet->SetReactState(ReactStates::REACT_DEFENSIVE);
+        //}
+        //if (mePet->GetCharmInfo()->GetReactState() != ReactStates::REACT_DEFENSIVE)
+        //{
+        //    mePet->GetCharmInfo()->SetReactState(ReactStates::REACT_DEFENSIVE);
+        //}
+        for (PetSpellMap::iterator itr = mePet->m_petSpells.begin(); itr != mePet->m_petSpells.end(); itr++)
         {
-            uint32 bookEntry = *bookIT;
-            if (ItemPrototype const* bookProto = sObjectMgr.GetItemPrototype(bookEntry))
+            mePet->ToggleAutocast(itr->first, true);
+        }
+    }
+
+    uint32 meLevel = me->GetLevel();
+    for (std::unordered_set<uint32>::iterator bookIT = petSpellBooksItemIdSet.begin(); bookIT != petSpellBooksItemIdSet.end(); bookIT++)
+    {
+        uint32 bookEntry = *bookIT;
+        if (ItemPrototype const* bookProto = sObjectMgr.GetItemPrototype(bookEntry))
+        {
+            if (bookProto->RequiredLevel > meLevel)
             {
-                if (bookProto->RequiredLevel > meLevel)
-                {
-                    continue;
-                }
-                // item spells casted at use
-                uint32 validBooksNumber = 0;
-                for (const _ItemSpell& spellData : bookProto->Spells)
-                {
-                    uint32 eachSpellId = spellData.SpellId;
-                    if (eachSpellId > 0)
-                    {
-                        me->CastSpell(me, eachSpellId, true);
-                        validBooksNumber++;
-                    }
-                }
-                std::ostringstream msgStream;
-                msgStream << "books learned : " << validBooksNumber;
-                me->Say(msgStream.str().c_str(), Language::LANG_UNIVERSAL);
+                continue;
             }
+            // item spells casted at use
+            uint32 validBooksNumber = 0;
+            for (const _ItemSpell& spellData : bookProto->Spells)
+            {
+                uint32 eachSpellId = spellData.SpellId;
+                if (eachSpellId > 0)
+                {
+                    me->CastSpell(me, eachSpellId, true);
+                    validBooksNumber++;
+                }
+            }
+            std::ostringstream msgStream;
+            msgStream << "books learned : " << validBooksNumber;
+            me->Say(msgStream.str().c_str(), Language::LANG_UNIVERSAL);
         }
     }
 }

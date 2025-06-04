@@ -5,6 +5,7 @@ Nier_Priest::Nier_Priest()
 {
     spell_Shoot = 0;
     spell_Smite = 0;
+    spell_ShadowWord_Pain = 0;
 
     spell_Renew = 0;
     spell_LesserHeal = 0;
@@ -27,6 +28,7 @@ Nier_Priest::Nier_Priest()
     spell_PainSuppression = 0;
     spell_DesperatePrayer = 0;
     spell_HolyNova = 0;
+
     aura_Surge_of_Light = 0;
 }
 
@@ -35,6 +37,56 @@ bool Nier_Priest::Attack(Unit* pTarget)
     if (!Nier_Base::Attack(pTarget))
     {
         return false;
+    }
+
+    if (me->IsNonMeleeSpellCasted(false, false, true))
+    {
+        return true;
+    }
+    float targetDistance = me->GetDistance(pTarget);
+    if (targetDistance > VISIBILITY_DISTANCE_NORMAL)
+    {
+        return false;
+    }
+
+    ChooseTarget(pTarget);
+    if (Chase(pTarget, VISIBILITY_DISTANCE_TINY))
+    {
+        float meHealthPct = me->GetHealthPercent();
+        if (meHealthPct < 70.0f)
+        {
+            if (spell_PowerWord_Shield > 0)
+            {
+                if (!me->HasAura(spell_Weakened_Soul))
+                {
+                    if (CastSpell(me, spell_PowerWord_Shield))
+                    {
+                        return true;
+                    }
+                }
+            }
+            if (spell_Renew > 0)
+            {
+                if (CastSpell(me, spell_Renew, true, true))
+                {
+                    return true;
+                }
+            }
+        }
+        if (spell_ShadowWord_Pain > 0)
+        {
+            if (CastSpell(pTarget, spell_ShadowWord_Pain, true, true))
+            {
+                return true;
+            }
+        }
+        if (spell_Smite > 0)
+        {
+            if (CastSpell(pTarget, spell_Smite))
+            {
+                return true;
+            }
+        }
     }
 
     return true;
@@ -253,17 +305,19 @@ bool Nier_Priest::InitializeCharacter(uint32 pTargetLevel)
     // wand
     me->LearnSpell(5009, true);
     spell_Shoot = 5019;
-    spell_Smite = 585;
 
+    spell_Smite = 585;
     spell_LesserHeal = 2050;
     spell_PowerWord_Fortitude = 1243;
     if (myLevel >= 4)
     {
         spell_LesserHeal = 2052;
+        spell_ShadowWord_Pain = 589;
     }
     if (myLevel >= 6)
     {
         spell_PowerWord_Shield = 17;
+        spell_Smite = 591;
     }
     if (myLevel >= 8)
     {
@@ -273,6 +327,7 @@ bool Nier_Priest::InitializeCharacter(uint32 pTargetLevel)
     {
         spell_LesserHeal = 2053;
         spell_Resurrection = 2006;
+        spell_ShadowWord_Pain = 594;
     }
     if (myLevel >= 12)
     {
@@ -283,6 +338,7 @@ bool Nier_Priest::InitializeCharacter(uint32 pTargetLevel)
     {
         spell_Renew = 6074;
         spell_CureDisease = 528;
+        spell_Smite = 598;
     }
     if (myLevel >= 16)
     {
@@ -292,6 +348,7 @@ bool Nier_Priest::InitializeCharacter(uint32 pTargetLevel)
     {
         spell_DispelMagic = 527;
         spell_PowerWord_Shield = 600;
+        spell_ShadowWord_Pain = 970;
     }
     if (myLevel >= 20)
     {
@@ -304,6 +361,7 @@ bool Nier_Priest::InitializeCharacter(uint32 pTargetLevel)
     {
         spell_Heal = 2055;
         spell_Resurrection = 2010;
+        spell_Smite = 984;
     }
     if (myLevel >= 24)
     {
@@ -314,6 +372,7 @@ bool Nier_Priest::InitializeCharacter(uint32 pTargetLevel)
     {
         spell_Renew = 6076;
         spell_FlashHeal = 9472;
+        spell_ShadowWord_Pain = 992;
     }
     if (myLevel >= 28)
     {
@@ -325,6 +384,7 @@ bool Nier_Priest::InitializeCharacter(uint32 pTargetLevel)
         spell_DivineSpirit = 14752;
         spell_PowerWord_Shield = 6065;
         spell_Prayer_of_Healing = 596;
+        spell_Smite = 1004;
     }
     if (myLevel >= 32)
     {
@@ -335,6 +395,7 @@ bool Nier_Priest::InitializeCharacter(uint32 pTargetLevel)
     {
         spell_Heal = 6064;
         spell_Resurrection = 10880;
+        spell_ShadowWord_Pain = 2767;
     }
     if (myLevel >= 36)
     {
@@ -347,6 +408,7 @@ bool Nier_Priest::InitializeCharacter(uint32 pTargetLevel)
     {
         spell_Renew = 6078;
         spell_FlashHeal = 9474;
+        spell_Smite = 6060;
     }
     if (myLevel >= 40)
     {
@@ -358,6 +420,7 @@ bool Nier_Priest::InitializeCharacter(uint32 pTargetLevel)
     if (myLevel >= 42)
     {
         spell_PowerWord_Shield = 10898;
+        spell_ShadowWord_Pain = 10892;
     }
     if (myLevel >= 44)
     {
@@ -369,6 +432,7 @@ bool Nier_Priest::InitializeCharacter(uint32 pTargetLevel)
     {
         spell_GreaterHeal = 10963;
         spell_Resurrection = 10881;
+        spell_Smite = 10933;
     }
     if (myLevel >= 48)
     {
@@ -383,6 +447,7 @@ bool Nier_Priest::InitializeCharacter(uint32 pTargetLevel)
         spell_DivineSpirit = 14819;
         spell_Prayer_of_Healing = 10960;
         spell_PainSuppression = 33206;
+        spell_ShadowWord_Pain = 10893;
     }
     if (myLevel >= 52)
     {
@@ -392,6 +457,7 @@ bool Nier_Priest::InitializeCharacter(uint32 pTargetLevel)
     if (myLevel >= 54)
     {
         spell_PowerWord_Shield = 10900;
+        spell_Smite = 10934;
     }
     if (myLevel >= 56)
     {
@@ -402,6 +468,7 @@ bool Nier_Priest::InitializeCharacter(uint32 pTargetLevel)
     {
         spell_GreaterHeal = 10965;
         spell_Resurrection = 20770;
+        spell_ShadowWord_Pain = 10894;
     }
     if (myLevel >= 60)
     {

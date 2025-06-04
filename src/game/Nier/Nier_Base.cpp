@@ -41,6 +41,7 @@ Nier_Base::Nier_Base()
     timeValue = 0;
     checkDelay = 0;
     resetDelay = 0;
+    prepareDelay = 0;
 }
 
 void Nier_Base::ClearAction()
@@ -56,19 +57,31 @@ void Nier_Base::ClearAction()
     actionTargetSpell = 0;
 }
 
-void Nier_Base::Prepare()
+bool Nier_Base::Prepare()
 {
     if (me)
     {
-        me->SetPvP(true);
-        me->UpdatePvP(true);
-        me->DurabilityRepairAll(false, 0);
-        if (me->GetMap()->Instanceable())
+        if (me->IsAlive())
         {
-            me->TeleportToHomebind(TeleportToOptions::TELE_TO_GM_MODE, false);
+            me->SetPvP(true);
+            me->UpdatePvP(true);
+            me->DurabilityRepairAll(false, 0);
+            if (!me->GetGroup())
+            {
+                if (me->GetMap()->Instanceable())
+                {
+                    me->TeleportToHomebind(TeleportToOptions::TELE_TO_GM_MODE, false);
+                }
+            }
+            followDistance = frand(ATTACK_DISTANCE, INSPECT_DISTANCE);
+
+            prepareDelay = urand(10 * IN_MILLISECONDS, 20 * IN_MILLISECONDS);
+
+            return true;
         }
-        followDistance = frand(ATTACK_DISTANCE, INSPECT_DISTANCE);
     }
+
+    return false;
 }
 
 void Nier_Base::Update(uint64 pTimeValue)
@@ -77,6 +90,7 @@ void Nier_Base::Update(uint64 pTimeValue)
     timeValue = pTimeValue;
     checkDelay -= elapsed;
     resetDelay -= elapsed;
+    prepareDelay -= elapsed;
     actionDuration += elapsed;
     if (checkDelay > 0)
     {
@@ -404,8 +418,8 @@ bool Nier_Base::UpdateAccount()
             }
             else
             {
-                Prepare();
                 resetDelay = urand(30 * IN_MILLISECONDS, 60 * IN_MILLISECONDS);
+                prepareDelay = urand(1 * IN_MILLISECONDS, 5 * IN_MILLISECONDS);
                 accountState = NierAccountState::NierAccountState_Online;
             }
             checkDelay = urand(1 * IN_MILLISECONDS, 3 * IN_MILLISECONDS);
@@ -657,6 +671,10 @@ bool Nier_Base::UpdateMind()
     if (!IsInWorld())
     {
         return false;
+    }
+    if (prepareDelay < 0)
+    {
+        Prepare();
     }
     if (Group* meGroup = me->GetGroup())
     {
@@ -924,6 +942,14 @@ bool Nier_Base::UpdateMind()
                 {
                     return true;
                 }
+                if (Cure(me))
+                {
+                    return true;
+                }
+                if (Buff(me))
+                {
+                    return true;
+                }
                 uint32 actionRate = urand(0, 100);
                 if (actionRate < 50)
                 {
@@ -956,39 +982,47 @@ bool Nier_Base::UpdateMind()
             }
             else
             {
-                ObjectGuid masterGuid = ObjectGuid(HighGuid::HIGHGUID_PLAYER, master_character_id);
-                if (Player* master = ObjectAccessor::FindPlayer(masterGuid))
-                {
-                    if (master->IsInWorld())
-                    {
-                        float nearDistance = frand(VISIBILITY_DISTANCE_NORMAL, VISIBILITY_DISTANCE_LARGE);
-                        float nearAngle = frand(0, M_PI_F * 2);
-                        float nearX = master->GetPositionX();
-                        float nearY = master->GetPositionY();
-                        float nearZ = master->GetPositionZ();
-                        master->GetNearPoint(master, nearX, nearY, nearZ, master->GetObjectBoundingRadius(), nearDistance, nearAngle);
-                        Teleport(master->GetMapId(), nearX, nearY, nearZ);
-
-                        if (me->IsAlive())
-                        {
-                            actionState = NierActionState::NierActionState_Teleport;
-                            actionDuration = 0;
-                            actionTimeLimit = urand(1000, 2000);
-                            actionTargetSpell = 0;
-                        }
-                        else
-                        {
-                            actionState = NierActionState::NierActionState_Corpse;
-                            actionDuration = 0;
-                            actionTimeLimit = urand(1000, 3000);
-                            actionTargetSpell = 0;
-                        }
-                    }
-                }
-                resetDelay = urand(10 * MINUTE * IN_MILLISECONDS, 20 * MINUTE * IN_MILLISECONDS);
+                Reset();
             }
         }
     }
+
+    return false;
+}
+
+bool Nier_Base::Reset()
+{
+    ObjectGuid masterGuid = ObjectGuid(HighGuid::HIGHGUID_PLAYER, master_character_id);
+    if (Player* master = ObjectAccessor::FindPlayer(masterGuid))
+    {
+        if (master->IsInWorld())
+        {
+            float nearDistance = frand(VISIBILITY_DISTANCE_NORMAL, VISIBILITY_DISTANCE_LARGE);
+            float nearAngle = frand(0, M_PI_F * 2);
+            float nearX = master->GetPositionX();
+            float nearY = master->GetPositionY();
+            float nearZ = master->GetPositionZ();
+            master->GetNearPoint(master, nearX, nearY, nearZ, master->GetObjectBoundingRadius(), nearDistance, nearAngle);
+            Teleport(master->GetMapId(), nearX, nearY, nearZ);
+
+            if (me->IsAlive())
+            {
+                actionState = NierActionState::NierActionState_Teleport;
+                actionDuration = 0;
+                actionTimeLimit = urand(1000, 2000);
+                actionTargetSpell = 0;
+            }
+            else
+            {
+                actionState = NierActionState::NierActionState_Corpse;
+                actionDuration = 0;
+                actionTimeLimit = urand(1000, 3000);
+                actionTargetSpell = 0;
+            }
+            return true;
+        }
+    }
+    resetDelay = urand(10 * MINUTE * IN_MILLISECONDS, 20 * MINUTE * IN_MILLISECONDS);
 
     return false;
 }

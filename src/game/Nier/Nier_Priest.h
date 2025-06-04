@@ -20,6 +20,7 @@ public:
 private:
     uint32 spell_Shoot;
     uint32 spell_Smite;
+    uint32 spell_ShadowWord_Pain;
 
     uint32 spell_Renew;
     uint32 spell_LesserHeal;
@@ -42,6 +43,7 @@ private:
     uint32 spell_PainSuppression;
     uint32 spell_DesperatePrayer;
     uint32 spell_HolyNova;
+
     uint32 aura_Surge_of_Light;
 };
 #endif

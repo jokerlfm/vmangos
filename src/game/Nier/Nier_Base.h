@@ -62,13 +62,14 @@ public:
     virtual bool InitializeCharacter(uint32 pTargetLevel);
     virtual bool ResetTalentsAndSpells();
     virtual void EquipRandomItem(uint32 pEquipSlot);
-    virtual void Prepare();
+    virtual bool Prepare();
 
     void Update(uint64 pTimeValue);
     bool UpdateAccount();
     bool UpdateAction();
     bool UpdateMind();
 
+    bool Reset();
     bool Idle();
     bool Wander();
     bool PVE();
@@ -135,5 +136,6 @@ public:
     uint64 timeValue;
     int checkDelay;
     int resetDelay;
+    int prepareDelay;
 };
 #endif

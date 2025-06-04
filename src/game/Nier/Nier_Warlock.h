@@ -16,7 +16,7 @@ public:
     bool InitializeCharacter(uint32 pTargetLevel);
     bool ResetTalentsAndSpells();
     void EquipRandomItem(uint32 pEquipSlot);
-    void Prepare();
+    bool Prepare();
 
     uint32 spell_Shoot;
     uint32 spell_Immolate;
