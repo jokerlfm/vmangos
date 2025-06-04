@@ -63,6 +63,21 @@ bool Nier_Base::Prepare()
     {
         if (me->IsAlive())
         {
+            ObjectGuid masterGuid = ObjectGuid(HighGuid::HIGHGUID_PLAYER, master_character_id);
+            if (Player* master = ObjectAccessor::FindPlayer(masterGuid))
+            {
+                if (master->IsInWorld())
+                {
+                    uint32 myLevel = me->GetLevel();
+                    if (myLevel != master->GetLevel())
+                    {
+                        me->Say("reinitialize", Language::LANG_UNIVERSAL);
+                        accountState = NierAccountState::NierAccountState_Initialize;
+                        checkDelay = urand(2 * IN_MILLISECONDS, 5 * IN_MILLISECONDS);
+                        return false;
+                    }
+                }
+            }
             me->SetPvP(true);
             me->UpdatePvP(true);
             me->DurabilityRepairAll(false, 0);
@@ -905,8 +920,35 @@ bool Nier_Base::UpdateMind()
     else
     {
         // solo
+        // target player
+        if (Player* targetPlayer = me->GetSelectedPlayer())
+        {
+            float targetDistance = me->GetDistance(targetPlayer);
+            if (targetDistance > DEFAULT_VISIBILITY_DISTANCE)
+            {
+                ClearTarget();
+            }
+            else if (!Attack(targetPlayer))
+            {
+                ClearTarget();
+            }
+            else
+            {
+                return true;
+            }
+        }
+        // nearby player
+        if (Player* targetPlayer = me->FindNearestHostilePlayer(VISIBILITY_DISTANCE_TINY))
+        {
+            if (Attack(targetPlayer))
+            {
+                return true;
+            }
+        }
+
         if (me->IsInCombat())
         {
+            // attackers
             Unit* enemy = nullptr;
             for (auto const& pAttacker : me->GetAttackers())
             {
