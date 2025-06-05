@@ -59,6 +59,8 @@ void Nier_Base::ClearAction()
 
 bool Nier_Base::Prepare()
 {
+    prepareDelay = urand(10 * IN_MILLISECONDS, 20 * IN_MILLISECONDS);
+
     if (me)
     {
         if (me->IsAlive())
@@ -89,9 +91,6 @@ bool Nier_Base::Prepare()
                 }
             }
             followDistance = frand(ATTACK_DISTANCE, INSPECT_DISTANCE);
-
-            prepareDelay = urand(10 * IN_MILLISECONDS, 20 * IN_MILLISECONDS);
-
             return true;
         }
     }
@@ -389,30 +388,43 @@ bool Nier_Base::UpdateAccount()
             {
                 if (master->IsInWorld())
                 {
-                    InitializeCharacter(master->GetLevel());
-                    replyStream << "nier initialized : " << account_id << " - " << character_id << " - " << me->GetName();
-                    sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, replyStream.str().c_str());
+                    if (InitializeCharacter(master->GetLevel()))
+                    {
+                        replyStream << "nier initialized : " << account_id << " - " << character_id << " - " << me->GetName();
+                        sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, replyStream.str().c_str());
 
-                    // role initialize
-                    uint32 meClass = me->GetClass();
-                    if (meClass == Classes::CLASS_WARRIOR || meClass == Classes::CLASS_DRUID)
-                    {
-                        me->nierGroupRole = NierGroupRole::NierGroupRole_Tank;
-                    }
-                    else if (meClass == Classes::CLASS_PRIEST)
-                    {
-                        me->nierGroupRole = NierGroupRole::NierGroupRole_Healer;
+                        // role initialize
+                        uint32 meClass = me->GetClass();
+                        if (meClass == Classes::CLASS_WARRIOR || meClass == Classes::CLASS_DRUID)
+                        {
+                            me->nierGroupRole = NierGroupRole::NierGroupRole_Tank;
+                        }
+                        else if (meClass == Classes::CLASS_PRIEST)
+                        {
+                            me->nierGroupRole = NierGroupRole::NierGroupRole_Healer;
+                        }
+                        else
+                        {
+                            me->nierGroupRole = NierGroupRole::NierGroupRole_DPS;
+                        }
+
+                        accountState = NierAccountState::NierAccountState_Equip;
+                        checkDelay = urand(2 * IN_MILLISECONDS, 5 * IN_MILLISECONDS);
+                        break;
                     }
                     else
                     {
-                        me->nierGroupRole = NierGroupRole::NierGroupRole_DPS;
+                        replyStream << "not initialized : " << account_id << " - " << character_id << " - " << me->GetName();
+                        sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, replyStream.str().c_str());
+                        checkDelay = urand(1 * IN_MILLISECONDS, 3 * IN_MILLISECONDS);
                     }
-
-                    accountState = NierAccountState::NierAccountState_Equip;
-                    checkDelay = urand(2 * IN_MILLISECONDS, 5 * IN_MILLISECONDS);
-                    break;
                 }
             }
+        }
+        else
+        {
+            replyStream << "still not in world - " << account_id << " - " << character_id;
+            sWorld.SendServerMessage(ServerMessageType::SERVER_MSG_CUSTOM, replyStream.str().c_str());
         }
         checkDelay = urand(10 * IN_MILLISECONDS, 20 * IN_MILLISECONDS);
         break;
@@ -701,10 +713,11 @@ bool Nier_Base::UpdateMind()
         {
             return true;
         }
-        if (me->IsNonMeleeSpellCasted(false, false, true))
+        if (me->IsNonMeleeSpellCasted(true, false, true))
         {
             return true;
         }
+
         // grouping
         switch (me->nierGroupRole)
         {
@@ -920,21 +933,45 @@ bool Nier_Base::UpdateMind()
     else
     {
         // solo
+        if (resetDelay < 0)
+        {
+            if (!me->IsInCombat())
+            {
+                Reset();
+                return true;
+            }
+        }
+
+        if (!me->IsAlive())
+        {
+            return false;
+        }
+        if (!me->CanFreeMove())
+        {
+            return true;
+        }
+        if (me->IsNonMeleeSpellCasted(true, false, true))
+        {
+            return true;
+        }
         // target player
         if (Player* targetPlayer = me->GetSelectedPlayer())
         {
-            float targetDistance = me->GetDistance(targetPlayer);
-            if (targetDistance > DEFAULT_VISIBILITY_DISTANCE)
+            if (me->GetReactionTo(targetPlayer) < REP_FRIENDLY)
             {
-                ClearTarget();
-            }
-            else if (!Attack(targetPlayer))
-            {
-                ClearTarget();
-            }
-            else
-            {
-                return true;
+                float targetDistance = me->GetDistance(targetPlayer);
+                if (targetDistance > DEFAULT_VISIBILITY_DISTANCE)
+                {
+                    ClearTarget();
+                }
+                else if (!Attack(targetPlayer))
+                {
+                    ClearTarget();
+                }
+                else
+                {
+                    return true;
+                }
             }
         }
         // nearby player
@@ -945,7 +982,6 @@ bool Nier_Base::UpdateMind()
                 return true;
             }
         }
-
         if (me->IsInCombat())
         {
             // attackers
@@ -955,76 +991,64 @@ bool Nier_Base::UpdateMind()
                 float attackerDistance = me->GetDistance(pAttacker);
                 if (attackerDistance < DEFAULT_VISIBILITY_DISTANCE)
                 {
-                    enemy = pAttacker;
-                    if (pAttacker->GetTypeId() == TypeID::TYPEID_PLAYER)
+                    if (Attack(pAttacker))
                     {
-                        break;
+                        return true;
                     }
                 }
             }
-            Attack(enemy);
+
+            if (Cure(me))
+            {
+                return true;
+            }
+            if (Buff(me))
+            {
+                return true;
+            }
         }
         else
         {
-            if (resetDelay > 0)
+            if (Rest())
             {
-                if (!me->IsAlive())
-                {
-                    return false;
-                }
-                if (!me->CanFreeMove())
-                {
-                    return true;
-                }
-                if (me->IsNonMeleeSpellCasted(false, false, true))
-                {
-                    return true;
-                }
-                if (Rest())
-                {
-                    return true;
-                }
-                if (Cure(me))
+                return true;
+            }
+            if (Cure(me))
+            {
+                return true;
+            }
+            if (Buff(me))
+            {
+                return true;
+            }
+            uint32 actionRate = urand(0, 100);
+            if (actionRate < 50)
+            {
+                if (Wander())
                 {
                     return true;
                 }
-                if (Buff(me))
+            }
+            else if (actionRate < 70)
+            {
+                if (PVE())
                 {
                     return true;
                 }
-                uint32 actionRate = urand(0, 100);
-                if (actionRate < 50)
+            }
+            else if (actionRate < 90)
+            {
+                if (PVP())
                 {
-                    if (Wander())
-                    {
-                        return true;
-                    }
-                }
-                else if (actionRate < 70)
-                {
-                    if (PVE())
-                    {
-                        return true;
-                    }
-                }
-                else if (actionRate < 90)
-                {
-                    if (PVP())
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    if (Idle())
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
             else
             {
-                Reset();
+                if (Idle())
+                {
+                    return true;
+                }
             }
         }
     }
@@ -1034,6 +1058,7 @@ bool Nier_Base::UpdateMind()
 
 bool Nier_Base::Reset()
 {
+    resetDelay = urand(10 * MINUTE * IN_MILLISECONDS, 20 * MINUTE * IN_MILLISECONDS);
     ObjectGuid masterGuid = ObjectGuid(HighGuid::HIGHGUID_PLAYER, master_character_id);
     if (Player* master = ObjectAccessor::FindPlayer(masterGuid))
     {
@@ -1064,7 +1089,6 @@ bool Nier_Base::Reset()
             return true;
         }
     }
-    resetDelay = urand(10 * MINUTE * IN_MILLISECONDS, 20 * MINUTE * IN_MILLISECONDS);
 
     return false;
 }
@@ -1179,7 +1203,7 @@ bool Nier_Base::Attack(Unit* pTarget)
     {
         return false;
     }
-    if (me->IsNonMeleeSpellCasted(false, false, true))
+    if (me->IsNonMeleeSpellCasted(true, false, true))
     {
         return true;
     }
@@ -1231,7 +1255,7 @@ bool Nier_Base::Heal(Unit* pTarget)
     {
         return false;
     }
-    if (me->IsNonMeleeSpellCasted(false, false, true))
+    if (me->IsNonMeleeSpellCasted(true, false, true))
     {
         return true;
     }
@@ -1248,7 +1272,7 @@ bool Nier_Base::Follow()
     {
         return false;
     }
-    if (me->IsNonMeleeSpellCasted(false, false, true))
+    if (me->IsNonMeleeSpellCasted(true, false, true))
     {
         return true;
     }
@@ -1375,6 +1399,12 @@ bool Nier_Base::InitializeCharacter(uint32 pTargetLevel)
 {
     if (!IsInWorld())
     {
+        return false;
+    }
+
+    if (!me->IsAlive())
+    {
+        me->ResurrectPlayer(10.0f);
         return false;
     }
 
@@ -1573,7 +1603,7 @@ bool Nier_Base::UseItem(Item* pItem, Unit* pTarget)
         return false;
     }
 
-    if (me->IsNonMeleeSpellCasted(false, false, true))
+    if (me->IsNonMeleeSpellCasted(true, false, true))
     {
         return false;
     }
@@ -1611,7 +1641,7 @@ bool Nier_Base::UseItem(Item* pItem, Item* pTarget)
     {
         return false;
     }
-    if (me->IsNonMeleeSpellCasted(false, false, true))
+    if (me->IsNonMeleeSpellCasted(true, false, true))
     {
         return false;
     }
@@ -1641,7 +1671,7 @@ bool Nier_Base::CastSpell(Unit* pTarget, uint32 pSpellId, bool pCheckAura, bool 
     {
         return false;
     }
-    if (me->IsNonMeleeSpellCasted(false, false, true))
+    if (me->IsNonMeleeSpellCasted(true, false, true))
     {
         return true;
     }
@@ -2283,7 +2313,6 @@ bool Nier_Base::IsOnline()
 
     return false;
 }
-
 
 bool Nier_Base::IsInWorld()
 {
