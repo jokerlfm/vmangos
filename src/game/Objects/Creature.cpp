@@ -1050,7 +1050,7 @@ void Creature::RegenerateMana()
     // lfm creature mana regen
     if (GetCharmerOrOwnerGuid().IsPlayer())
     {
-        addvalue = GetStat(STAT_SPIRIT);
+        addvalue = GetStat(STAT_SPIRIT) / 2;
     }
     else
     {
@@ -1107,7 +1107,7 @@ void Creature::RegenerateHealth()
     // lfm creature hp regen
     if (GetCharmerOrOwnerGuid().IsPlayer())
     {
-        addvalue = GetStat(STAT_SPIRIT);
+        addvalue = GetStat(STAT_SPIRIT) / 2;
     }
     else
     {

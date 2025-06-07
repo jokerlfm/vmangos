@@ -2449,7 +2449,7 @@ void Player::RegenerateHealth()
 
         // lfm hp regen 
         float spiritRegen = GetStat(STAT_SPIRIT);
-        spiritRegen = spiritRegen * 2 / 5;
+        spiritRegen = spiritRegen * 2 / 10;
         addValue = spiritRegen * HealthIncreaseRate;
 
         if (!IsInCombat())
