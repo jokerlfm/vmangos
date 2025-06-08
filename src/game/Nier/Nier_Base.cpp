@@ -42,6 +42,8 @@ Nier_Base::Nier_Base()
     checkDelay = 0;
     resetDelay = 0;
     prepareDelay = 0;
+
+    ogTank = ObjectGuid();
 }
 
 void Nier_Base::ClearAction()
@@ -761,7 +763,7 @@ bool Nier_Base::UpdateMind()
                 {
                     if (Unit* leaderTarget = leader->GetSelectedUnit())
                     {
-                        float ltDistance = me->GetDistance(leaderTarget);
+                        float ltDistance = leader->GetDistance(leaderTarget);
                         if (ltDistance < INSPECT_DISTANCE)
                         {
                             if (Tank(leaderTarget))

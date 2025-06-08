@@ -137,5 +137,7 @@ public:
     int checkDelay;
     int resetDelay;
     int prepareDelay;
+
+    ObjectGuid ogTank;
 };
 #endif

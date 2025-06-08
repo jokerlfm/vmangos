@@ -1059,6 +1059,20 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
             }
         }
     }
+    else if (commandName == "arrangement")
+    {
+        if (commandVector.size() > 1)
+        {
+            std::string targetName = commandVector.at(1);
+            if (Player* targetPlayer = ObjectAccessor::FindPlayerByName(targetName.c_str()))
+            {
+                if (targetPlayer->nier)
+                {
+                    targetPlayer->nier->resetDelay = 5;
+                }
+            }
+        }
+    }
 
     std::string replayStr = replyStream.str();
     if (!replayStr.empty())
