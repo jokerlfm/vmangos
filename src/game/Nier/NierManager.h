@@ -1,11 +1,6 @@
 #ifndef NIER_MANAGER_H
 #define NIER_MANAGER_H
 
-#define NIER_DISTANCE_CONTACT 5.0f
-#define NIER_DISTANCE_FOLLOW 10.0f
-#define NIER_DISTANCE_ENGAGE 30.0f
-#define NIER_DISTANCE_MAX 100.0f
-
 #include"Nier_Base.h"
 
 #include <string>

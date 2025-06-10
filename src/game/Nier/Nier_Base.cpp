@@ -61,39 +61,42 @@ void Nier_Base::ClearAction()
 
 bool Nier_Base::Prepare()
 {
-    prepareDelay = urand(10 * IN_MILLISECONDS, 20 * IN_MILLISECONDS);
+    prepareDelay = urand(10 * MINUTE * IN_MILLISECONDS, 20 * MINUTE * IN_MILLISECONDS);
 
     if (me)
     {
         if (me->IsAlive())
         {
-            ObjectGuid masterGuid = ObjectGuid(HighGuid::HIGHGUID_PLAYER, master_character_id);
-            if (Player* master = ObjectAccessor::FindPlayer(masterGuid))
+            if (!me->IsInCombat())
             {
-                if (master->IsInWorld())
+                ObjectGuid masterGuid = ObjectGuid(HighGuid::HIGHGUID_PLAYER, master_character_id);
+                if (Player* master = ObjectAccessor::FindPlayer(masterGuid))
                 {
-                    uint32 myLevel = me->GetLevel();
-                    if (myLevel != master->GetLevel())
+                    if (master->IsInWorld())
                     {
-                        me->Say("reinitialize", Language::LANG_UNIVERSAL);
-                        accountState = NierAccountState::NierAccountState_Initialize;
-                        checkDelay = urand(2 * IN_MILLISECONDS, 5 * IN_MILLISECONDS);
-                        return false;
+                        uint32 myLevel = me->GetLevel();
+                        if (myLevel != master->GetLevel())
+                        {
+                            me->Say("reinitialize", Language::LANG_UNIVERSAL);
+                            accountState = NierAccountState::NierAccountState_Initialize;
+                            checkDelay = urand(2 * IN_MILLISECONDS, 5 * IN_MILLISECONDS);
+                            return false;
+                        }
                     }
                 }
-            }
-            me->SetPvP(true);
-            me->UpdatePvP(true);
-            me->DurabilityRepairAll(false, 0);
-            if (!me->GetGroup())
-            {
-                if (me->GetMap()->Instanceable())
+                me->SetPvP(true);
+                me->UpdatePvP(true);
+                me->DurabilityRepairAll(false, 0);
+                if (!me->GetGroup())
                 {
-                    me->TeleportToHomebind(TeleportToOptions::TELE_TO_GM_MODE, false);
+                    if (me->GetMap()->Instanceable())
+                    {
+                        me->TeleportToHomebind(TeleportToOptions::TELE_TO_GM_MODE, false);
+                    }
                 }
+                followDistance = frand(NIER_DISTANCE_CONTACT, NIER_DISTANCE_FOLLOW);
+                return true;
             }
-            followDistance = frand(ATTACK_DISTANCE, INSPECT_DISTANCE);
-            return true;
         }
     }
 
@@ -731,7 +734,7 @@ bool Nier_Base::UpdateMind()
                 if (me->IsInCombat() && enemy->IsInCombat())
                 {
                     float enemyDistance = me->GetDistance(enemy);
-                    if (enemyDistance < VISIBILITY_DISTANCE_TINY)
+                    if (enemyDistance < NIER_DISTANCE_MAX_CHASE)
                     {
                         if (Tank(enemy))
                         {
@@ -747,7 +750,7 @@ bool Nier_Base::UpdateMind()
                 if (Unit* skull = ObjectAccessor::GetUnit(*me, ogSkull))
                 {
                     float skullDistance = me->GetDistance(skull);
-                    if (skullDistance < VISIBILITY_DISTANCE_TINY)
+                    if (skullDistance < NIER_DISTANCE_MAX_CHASE)
                     {
                         if (Tank(skull))
                         {
@@ -764,7 +767,7 @@ bool Nier_Base::UpdateMind()
                     if (Unit* leaderTarget = leader->GetSelectedUnit())
                     {
                         float ltDistance = leader->GetDistance(leaderTarget);
-                        if (ltDistance < INSPECT_DISTANCE)
+                        if (ltDistance < NIER_DISTANCE_FOLLOW)
                         {
                             if (Tank(leaderTarget))
                             {
@@ -779,7 +782,7 @@ bool Nier_Base::UpdateMind()
             for (Unit* pAttacker : attackersSet)
             {
                 float attackerDistance = me->GetDistance(pAttacker);
-                if (attackerDistance < VISIBILITY_DISTANCE_TINY)
+                if (attackerDistance < NIER_DISTANCE_MAX_CHASE)
                 {
                     if (Tank(pAttacker))
                     {
@@ -798,8 +801,16 @@ bool Nier_Base::UpdateMind()
                     return true;
                 }
             }
-            ObjectGuid ogTank = meGroup->GetGuidByTargetIcon(0);
-            if (Player* tank = ObjectAccessor::FindPlayer(ogTank))
+            ObjectGuid ogIconTank = meGroup->GetGuidByTargetIcon(0);
+            if (Player* tank = ObjectAccessor::FindPlayer(ogIconTank))
+            {
+                if (tank->IsInCombat())
+                {
+                    Heal(tank);
+                    return true;
+                }
+            }
+            else if (Player* tank = ObjectAccessor::FindPlayer(ogTank))
             {
                 if (tank->IsInCombat())
                 {
@@ -818,7 +829,7 @@ bool Nier_Base::UpdateMind()
                 if (Unit* skull = ObjectAccessor::GetUnit(*me, ogSkull))
                 {
                     float skullDistance = me->GetDistance(skull);
-                    if (skullDistance < VISIBILITY_DISTANCE_TINY)
+                    if (skullDistance < NIER_DISTANCE_MAX_CHASE)
                     {
                         if (Attack(skull))
                         {
@@ -828,19 +839,29 @@ bool Nier_Base::UpdateMind()
                 }
             }
             // tank target 
-            ObjectGuid ogTank = meGroup->GetGuidByTargetIcon(0);
-            if (!ogTank.IsEmpty())
+            ObjectGuid ogIconTank = meGroup->GetGuidByTargetIcon(0);
+            if (Player* tank = ObjectAccessor::FindPlayer(ogIconTank))
             {
-                if (Player* tank = ObjectAccessor::FindPlayer(ogTank))
+                if (tank->IsInCombat())
                 {
-                    if (tank->IsInCombat())
+                    if (Unit* tTarget = tank->GetSelectedUnit())
                     {
-                        if (Unit* tTarget = tank->GetSelectedUnit())
+                        if (Attack(tTarget))
                         {
-                            if (Attack(tTarget))
-                            {
-                                return true;
-                            }
+                            return true;
+                        }
+                    }
+                }
+            }
+            else if (Player* tank = ObjectAccessor::FindPlayer(ogTank))
+            {
+                if (tank->IsInCombat())
+                {
+                    if (Unit* tTarget = tank->GetSelectedUnit())
+                    {
+                        if (Attack(tTarget))
+                        {
+                            return true;
                         }
                     }
                 }
@@ -851,7 +872,7 @@ bool Nier_Base::UpdateMind()
                 if (me->IsInCombat() && enemy->IsInCombat())
                 {
                     float enemyDistance = me->GetDistance(enemy);
-                    if (enemyDistance < VISIBILITY_DISTANCE_SMALL)
+                    if (enemyDistance < NIER_DISTANCE_MAX_CHASE)
                     {
                         if (Attack(enemy))
                         {
@@ -867,8 +888,8 @@ bool Nier_Base::UpdateMind()
                 {
                     if (Unit* leaderTarget = leader->GetSelectedUnit())
                     {
-                        float ltDistance = me->GetDistance(leaderTarget);
-                        if (ltDistance < INTERACTION_DISTANCE)
+                        float ltDistance = leader->GetDistance(leaderTarget);
+                        if (ltDistance < NIER_DISTANCE_CONTACT)
                         {
                             if (Attack(leaderTarget))
                             {
@@ -962,7 +983,7 @@ bool Nier_Base::UpdateMind()
             if (me->GetReactionTo(targetPlayer) < REP_FRIENDLY)
             {
                 float targetDistance = me->GetDistance(targetPlayer);
-                if (targetDistance > DEFAULT_VISIBILITY_DISTANCE)
+                if (targetDistance > NIER_DISTANCE_SIGHT)
                 {
                     ClearTarget();
                 }
@@ -977,7 +998,7 @@ bool Nier_Base::UpdateMind()
             }
         }
         // nearby player
-        if (Player* targetPlayer = me->FindNearestHostilePlayer(VISIBILITY_DISTANCE_TINY))
+        if (Player* targetPlayer = me->FindNearestHostilePlayer(NIER_DISTANCE_ENGAGE))
         {
             if (Attack(targetPlayer))
             {
@@ -991,7 +1012,7 @@ bool Nier_Base::UpdateMind()
             for (auto const& pAttacker : me->GetAttackers())
             {
                 float attackerDistance = me->GetDistance(pAttacker);
-                if (attackerDistance < DEFAULT_VISIBILITY_DISTANCE)
+                if (attackerDistance < NIER_DISTANCE_SIGHT)
                 {
                     if (Attack(pAttacker))
                     {
@@ -1066,7 +1087,7 @@ bool Nier_Base::Reset()
     {
         if (master->IsInWorld())
         {
-            float nearDistance = frand(VISIBILITY_DISTANCE_NORMAL, VISIBILITY_DISTANCE_LARGE);
+            float nearDistance = frand(NIER_DISTANCE_SIGHT, NIER_DISTANCE_TELEPORT);
             float nearAngle = frand(0, M_PI_F * 2);
             float nearX = master->GetPositionX();
             float nearY = master->GetPositionY();
@@ -1168,7 +1189,7 @@ bool Nier_Base::PVE()
 bool Nier_Base::Wander()
 {
     ClearAction();
-    float distance = frand(ATTACK_DISTANCE, VISIBILITY_DISTANCE_TINY);
+    float distance = frand(NIER_DISTANCE_CONTACT, NIER_DISTANCE_ENGAGE);
     float angle = frand(0.0f, 2 * M_PI);
     me->GetNearPoint(me, actionTargetPos.x, actionTargetPos.y, actionTargetPos.z, me->GetObjectBoundingRadius(), distance, angle);
     MoveToPosition(actionTargetPos, false);
@@ -1282,7 +1303,7 @@ bool Nier_Base::Follow()
     {
         if (Player* leader = ObjectAccessor::FindPlayer(meGroup->GetLeaderGuid()))
         {
-            if (me->GetDistance(leader) > VISIBILITY_DISTANCE_SMALL)
+            if (me->GetDistance(leader) > NIER_DISTANCE_SIGHT)
             {
                 return false;
             }
@@ -1304,7 +1325,7 @@ bool Nier_Base::Follow()
                 float destPosTargetDist = leader->GetDistance(actionTargetPos);
                 if (destPosTargetDist > followDistance)
                 {
-                    leader->GetNearPoint(leader, actionTargetPos.x, actionTargetPos.y, actionTargetPos.z, 0.0f, followDistance - ATTACK_DISTANCE, leader->GetAngle(me));
+                    leader->GetNearPoint(leader, actionTargetPos.x, actionTargetPos.y, actionTargetPos.z, 0.0f, followDistance - NIER_DISTANCE_CONTACT, leader->GetAngle(me));
                     MoveToPosition(actionTargetPos);
                 }
                 else
@@ -1389,7 +1410,7 @@ bool Nier_Base::Revive(Unit* pTarget)
     {
         return false;
     }
-    if (me->GetDistance(pTarget) > VISIBILITY_DISTANCE_TINY)
+    if (me->GetDistance(pTarget) > NIER_DISTANCE_ENGAGE)
     {
         return false;
     }
@@ -2089,14 +2110,13 @@ Item* Nier_Base::GetItemInInventory(uint32 pmEntry)
 
 Player* Nier_Base::GetNearbyHostilePlayer()
 {
-
-    if (Player* eachPlayer = me->FindNearestHostilePlayer(VISIBILITY_DISTANCE_NORMAL))
+    if (Player* eachPlayer = me->FindNearestHostilePlayer(NIER_DISTANCE_SIGHT))
     {
         if (eachPlayer->IsAlive())
         {
             if (me->IsValidAttackTarget(eachPlayer))
             {
-                if (eachPlayer->CanDetectStealthOf(me, VISIBILITY_DISTANCE_TINY))
+                if (eachPlayer->CanDetectStealthOf(me, NIER_DISTANCE_ENGAGE))
                 {
                     return eachPlayer;
                 }
@@ -2110,7 +2130,7 @@ Player* Nier_Base::GetNearbyHostilePlayer()
 Unit* Nier_Base::GetNearbyHostileUnit()
 {
     std::list<Creature*> creatureList;
-    me->GetCreatureListWithEntryInGrid(creatureList, 0, VISIBILITY_DISTANCE_TINY);
+    me->GetCreatureListWithEntryInGrid(creatureList, 0, NIER_DISTANCE_ENGAGE);
     if (!creatureList.empty())
     {
         for (std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
@@ -2159,7 +2179,7 @@ bool Nier_Base::Chase(Unit* pTarget, float pDistance)
     bool meInLos = false;
 
     float targetDistance = me->GetDistance(pTarget);
-    if (pDistance < ATTACK_DISTANCE)
+    if (pDistance < NIER_DISTANCE_CONTACT)
     {
         if (targetDistance < MIN_MELEE_REACH)
         {

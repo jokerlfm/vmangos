@@ -1061,14 +1061,21 @@ void NierManager::HandleChatCommand(Player* pCommander, std::string pCommand, Pl
     }
     else if (commandName == "arrangement")
     {
-        if (commandVector.size() > 1)
+        if (chatTarget->nier)
         {
-            std::string targetName = commandVector.at(1);
-            if (Player* targetPlayer = ObjectAccessor::FindPlayerByName(targetName.c_str()))
+            if (Group* targetGroup = chatTarget->GetGroup())
             {
-                if (targetPlayer->nier)
+                for (GroupReference* groupRef = targetGroup->GetFirstMember(); groupRef != nullptr; groupRef = groupRef->next())
                 {
-                    targetPlayer->nier->resetDelay = 5;
+                    if (Player* member = groupRef->getSource())
+                    {
+                        if (member->nierGroupRole == NierGroupRole::NierGroupRole_Tank)
+                        {
+                            chatTarget->nier->ogTank = member->GetObjectGuid();
+                            replyStream << "tank set - " << member->GetName();
+                            break;
+                        }
+                    }
                 }
             }
         }

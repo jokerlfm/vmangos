@@ -1,6 +1,14 @@
 #ifndef NIER_BASE_H
 #define NIER_BASE_H
 
+#define NIER_DISTANCE_CONTACT 5.0f
+#define NIER_DISTANCE_FOLLOW 10.0f
+#define NIER_DISTANCE_NEAR 15.0f
+#define NIER_DISTANCE_ENGAGE 30.0f
+#define NIER_DISTANCE_MAX_CHASE 50.0f
+#define NIER_DISTANCE_SIGHT 100.0f
+#define NIER_DISTANCE_TELEPORT 200.0f
+
 enum NierAccountState :uint32
 {
     NierAccountState_None = 0,

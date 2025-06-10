@@ -81,6 +81,7 @@ bool Nier_Warlock::Prepare()
     }
 
     uint32 meLevel = me->GetLevel();
+    uint32 validBooksNumber = 0;
     for (std::unordered_set<uint32>::iterator bookIT = petSpellBooksItemIdSet.begin(); bookIT != petSpellBooksItemIdSet.end(); bookIT++)
     {
         uint32 bookEntry = *bookIT;
@@ -91,7 +92,6 @@ bool Nier_Warlock::Prepare()
                 continue;
             }
             // item spells casted at use
-            uint32 validBooksNumber = 0;
             for (const _ItemSpell& spellData : bookProto->Spells)
             {
                 uint32 eachSpellId = spellData.SpellId;
@@ -101,11 +101,11 @@ bool Nier_Warlock::Prepare()
                     validBooksNumber++;
                 }
             }
-            std::ostringstream msgStream;
-            msgStream << "books learned : " << validBooksNumber;
-            me->Say(msgStream.str().c_str(), Language::LANG_UNIVERSAL);
         }
     }
+    std::ostringstream msgStream;
+    msgStream << "books learned : " << validBooksNumber;
+    me->Say(msgStream.str().c_str(), Language::LANG_UNIVERSAL);
 }
 
 bool Nier_Warlock::Attack(Unit* pTarget)
@@ -120,13 +120,13 @@ bool Nier_Warlock::Attack(Unit* pTarget)
         return true;
     }
     float targetDistance = me->GetDistance(pTarget);
-    if (targetDistance > VISIBILITY_DISTANCE_NORMAL)
+    if (targetDistance > NIER_DISTANCE_SIGHT)
     {
         return false;
     }
 
     ChooseTarget(pTarget);
-    if (Chase(pTarget, VISIBILITY_DISTANCE_TINY))
+    if (Chase(pTarget, NIER_DISTANCE_NEAR))
     {
         if (Pet* mePet = me->GetPet())
         {
