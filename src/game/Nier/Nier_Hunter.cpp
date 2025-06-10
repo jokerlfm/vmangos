@@ -123,6 +123,8 @@ bool Nier_Hunter::Prepare()
             }
         }
     }
+
+    return true;
 }
 
 bool Nier_Hunter::Attack(Unit* pTarget)
@@ -305,7 +307,7 @@ bool Nier_Hunter::Buff(Unit* pTarget)
             {
                 Pet* dbPet = new Pet;
                 if (dbPet->LoadPetFromDB(me, 0))
-                //if (dbPet->LoadPetFromDB(me, 0, petNumber))
+                    //if (dbPet->LoadPetFromDB(me, 0, petNumber))
                 {
                     if (CastSpell(me, spell_CallPet))
                     {

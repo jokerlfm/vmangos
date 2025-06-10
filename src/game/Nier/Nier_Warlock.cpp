@@ -106,6 +106,8 @@ bool Nier_Warlock::Prepare()
     std::ostringstream msgStream;
     msgStream << "books learned : " << validBooksNumber;
     me->Say(msgStream.str().c_str(), Language::LANG_UNIVERSAL);
+
+    return true;
 }
 
 bool Nier_Warlock::Attack(Unit* pTarget)
@@ -126,7 +128,7 @@ bool Nier_Warlock::Attack(Unit* pTarget)
     }
 
     ChooseTarget(pTarget);
-    if (Chase(pTarget, NIER_DISTANCE_NEAR))
+    if (Chase(pTarget, NIER_DISTANCE_PREPARE))
     {
         if (Pet* mePet = me->GetPet())
         {
