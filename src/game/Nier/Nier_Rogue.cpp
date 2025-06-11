@@ -42,12 +42,12 @@ bool Nier_Rogue::Attack(Unit* pTarget)
         return true;
     }
     float targetDistance = me->GetDistance(pTarget);
-    if (targetDistance > VISIBILITY_DISTANCE_NORMAL)
+    if (targetDistance > NIER_DISTANCE_SIGHT)
     {
         return false;
     }
 
-    if (targetDistance > VISIBILITY_DISTANCE_TINY)
+    if (targetDistance > NIER_DISTANCE_ENGAGE)
     {
         if (CastSpell(me, spell_Sprint))
         {

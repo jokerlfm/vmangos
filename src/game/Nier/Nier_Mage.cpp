@@ -53,14 +53,22 @@ bool Nier_Mage::Attack(Unit* pTarget)
         return true;
     }
     float targetDistance = me->GetDistance(pTarget);
-    if (targetDistance > VISIBILITY_DISTANCE_NORMAL)
+    if (targetDistance > NIER_DISTANCE_SIGHT)
     {
         return false;
     }
 
     ChooseTarget(pTarget);
-    if (Chase(pTarget, VISIBILITY_DISTANCE_TINY))
+    if (Chase(pTarget, NIER_DISTANCE_ENGAGE))
     {
+        if (me->GetHealthPercent() < 30.0f)
+        {
+            HealthPotion();
+        }
+        if (me->GetPowerPercent(Powers::POWER_MANA) < 30.0f)
+        {
+            ManaPotion();
+        }
         if (spell_Frostbolt > 0)
         {
             if (CastSpell(pTarget, spell_Frostbolt))
@@ -111,7 +119,7 @@ bool Nier_Mage::Buff(Unit* pTarget)
     }
 
     float targetDistance = me->GetDistance(pTarget);
-    if (targetDistance > VISIBILITY_DISTANCE_TINY)
+    if (targetDistance > NIER_DISTANCE_ENGAGE)
     {
         return false;
     }

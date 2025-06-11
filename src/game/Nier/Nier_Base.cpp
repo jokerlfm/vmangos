@@ -529,35 +529,35 @@ bool Nier_Base::UpdateAction()
     }
     case NierActionState_Idle:
     {
-        if (me->IsInCombat())
-        {
-            ClearAction();
-            actionResult = false;
-        }
-        else if (Player* targetPlayer = me->FindNearestHostilePlayer(NIER_DISTANCE_ENGAGE))
+        if (Player* targetPlayer = me->FindNearestHostilePlayer(NIER_DISTANCE_ENGAGE))
         {
             if (Attack(targetPlayer))
             {
                 ClearAction();
                 actionResult = false;
             }
+        }
+        else if (me->IsInCombat())
+        {
+            ClearAction();
+            actionResult = false;
         }
         break;
     }
     case NierActionState_Wander:
     {
-        if (me->IsInCombat())
-        {
-            ClearAction();
-            actionResult = false;
-        }
-        else if (Player* targetPlayer = me->FindNearestHostilePlayer(NIER_DISTANCE_ENGAGE))
+        if (Player* targetPlayer = me->FindNearestHostilePlayer(NIER_DISTANCE_ENGAGE))
         {
             if (Attack(targetPlayer))
             {
                 ClearAction();
                 actionResult = false;
             }
+        }
+        else if (me->IsInCombat())
+        {
+            ClearAction();
+            actionResult = false;
         }
         break;
     }
@@ -1920,11 +1920,11 @@ bool Nier_Base::HealthPotion()
     uint32 myLevel = me->GetLevel();
     if (myLevel >= 70)
     {
-        potionEntry = 33447;
+
     }
     else if (myLevel >= 55)
     {
-        potionEntry = 22829;
+
     }
     else if (myLevel >= 45)
     {
@@ -1982,11 +1982,11 @@ bool Nier_Base::ManaPotion()
     uint32 myLevel = me->GetLevel();
     if (myLevel >= 70)
     {
-        potionEntry = 33448;
+
     }
     else if (myLevel >= 55)
     {
-        potionEntry = 22832;
+
     }
     else if (myLevel >= 49)
     {

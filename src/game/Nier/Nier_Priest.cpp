@@ -44,14 +44,22 @@ bool Nier_Priest::Attack(Unit* pTarget)
         return true;
     }
     float targetDistance = me->GetDistance(pTarget);
-    if (targetDistance > VISIBILITY_DISTANCE_NORMAL)
+    if (targetDistance > NIER_DISTANCE_SIGHT)
     {
         return false;
     }
 
     ChooseTarget(pTarget);
-    if (Chase(pTarget, VISIBILITY_DISTANCE_TINY))
+    if (Chase(pTarget, NIER_DISTANCE_ENGAGE))
     {
+        if (me->GetHealthPercent() < 30.0f)
+        {
+            HealthPotion();
+        }
+        if (me->GetPowerPercent(Powers::POWER_MANA) < 30.0f)
+        {
+            ManaPotion();
+        }
         float meHealthPct = me->GetHealthPercent();
         if (meHealthPct < 70.0f)
         {
@@ -114,13 +122,13 @@ bool Nier_Priest::Heal(Unit* pTarget)
         return true;
     }
     float targetDistance = me->GetDistance(pTarget);
-    if (targetDistance > VISIBILITY_DISTANCE_NORMAL)
+    if (targetDistance > NIER_DISTANCE_SIGHT)
     {
         return false;
     }
 
     ChooseTarget(pTarget);
-    if (Chase(pTarget, VISIBILITY_DISTANCE_TINY))
+    if (Chase(pTarget, NIER_DISTANCE_ENGAGE))
     {
         float targetHealthPct = pTarget->GetHealthPercent();
         if (targetHealthPct < 90.0f)
@@ -238,7 +246,7 @@ bool Nier_Priest::Buff(Unit* pTarget)
     }
 
     float targetDistance = me->GetDistance(pTarget);
-    if (targetDistance > VISIBILITY_DISTANCE_TINY)
+    if (targetDistance > NIER_DISTANCE_ENGAGE)
     {
         return false;
     }

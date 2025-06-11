@@ -130,6 +130,14 @@ bool Nier_Warlock::Attack(Unit* pTarget)
     ChooseTarget(pTarget);
     if (Chase(pTarget, NIER_DISTANCE_PREPARE))
     {
+        if (me->GetHealthPercent() < 30.0f)
+        {
+            HealthPotion();
+        }
+        if (me->GetPowerPercent(Powers::POWER_MANA) < 30.0f)
+        {
+            ManaPotion();
+        }
         if (Pet* mePet = me->GetPet())
         {
             mePet->HandlePetCommand(CommandStates::COMMAND_ATTACK, pTarget);

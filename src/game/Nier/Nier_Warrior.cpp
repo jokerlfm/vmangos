@@ -179,6 +179,14 @@ bool Nier_Warrior::Tank(Unit* pTarget)
     me->Attack(pTarget, true);
     if (Chase(pTarget))
     {
+        if (me->GetHealthPercent() < 30.0f)
+        {
+            HealthPotion();
+        }
+        if (me->GetPowerPercent(Powers::POWER_MANA) < 30.0f)
+        {
+            ManaPotion();
+        }
         if (me->GetHealthPercent() < 20.0f)
         {
             if (spell_ShieldWall > 0)

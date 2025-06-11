@@ -139,7 +139,7 @@ bool Nier_Hunter::Attack(Unit* pTarget)
         return true;
     }
     float targetDistance = me->GetDistance(pTarget);
-    if (targetDistance > VISIBILITY_DISTANCE_NORMAL)
+    if (targetDistance > NIER_DISTANCE_SIGHT)
     {
         return false;
     }
@@ -147,6 +147,14 @@ bool Nier_Hunter::Attack(Unit* pTarget)
     ChooseTarget(pTarget);
     if (Chase(pTarget, 35.0f))
     {
+        if (me->GetHealthPercent() < 30.0f)
+        {
+            HealthPotion();
+        }
+        if (me->GetPowerPercent(Powers::POWER_MANA) < 30.0f)
+        {
+            ManaPotion();
+        }
         if (Pet* mePet = me->GetPet())
         {
             mePet->HandlePetCommand(CommandStates::COMMAND_ATTACK, pTarget);
@@ -166,7 +174,7 @@ bool Nier_Hunter::Attack(Unit* pTarget)
             }
         }
         float targetDistance = me->GetDistance(pTarget);
-        if (targetDistance > INSPECT_DISTANCE)
+        if (targetDistance > NIER_DISTANCE_FOLLOW)
         {
             bool shooting = false;
             if (Spell* spell = me->GetCurrentSpell(CURRENT_AUTOREPEAT_SPELL))
